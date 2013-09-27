@@ -1,0 +1,31 @@
+<html>
+<head>
+	<title>Test</title>
+	<meta charset="utf-8">
+	<script type="text/javascript" src="http://code.jquery.com/jquery-1.8.3.min.js"></script>
+	<script type="text/javascript" src="../qortexapi.js"></script>
+</head>
+<body>
+
+<script type="text/javascript">
+	qortexapi.baseurl="/api"
+
+	var g = new qortexapi.Global();
+
+	g.GetSession("felix@theplant.jp", "password", function(session, err) {
+		console.log(session, err)
+	})
+
+	var serv = g.GetAuthUserService("sessionstring")
+
+	serv.EditBroadcast("helloentryid", function(data, err){
+		console.log(data, err)
+	})
+
+	serv.GetPost("entryid1123123", "groupid12312312", function(g, err) {
+		console.log(g, err)
+	})
+
+</script>
+</body>
+</html>
