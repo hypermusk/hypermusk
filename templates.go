@@ -711,6 +711,7 @@ func {{$interface.Name}}_{{$method.Name}}(w http.ResponseWriter, r *http.Request
 		var req = $.ajax({
 			type: "POST",
 			url: methodUrl,
+			crossDomain: true,
 			contentType:"application/javascript; charset=utf-8",
 			dataType:"jsonp",
 			processData: false,
