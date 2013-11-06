@@ -636,21 +636,26 @@ type {{$interface.Name}}_{{$method.Name}}_Results struct {
 func {{$interface.Name}}_{{$method.Name}}(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept")
 	w.Header().Add("Access-Control-Allow-Origin", "*")
+	var body io.Reader
+	jsonpCallback := r.URL.Query().Get("callback")
+	if  jsonpCallback != "" {
+		body = strings.NewReader(r.URL.Query().Get("data"))
+		io.WriteString(w, jsonpCallback + "(")
+		defer io.WriteString(w, ")")
+	} else {
+		if r.Body == nil {
+			panic("no body")
+		}
+		defer r.Body.Close()
+		body = r.Body
+	}
 
 	var p {{$interface.Name}}_{{$method.Name}}_Params
-	if r.Body == nil {
-		panic("no body")
-	}
-	defer r.Body.Close()
-	dec := json.NewDecoder(r.Body)
+
+	dec := json.NewDecoder(body)
 	err := dec.Decode(&p)
 	var result {{$interface.Name}}_{{$method.Name}}_Results
 	enc := json.NewEncoder(w)
-	jsonpCallback := r.URL.Query().Get("callback")
-	if  jsonpCallback != "" {
-		io.WriteString(w, jsonpCallback + "(")
-		defer io.WriteString(w, ")")
-	}
 	if err != nil {
 		result.Err = NewError(err)
 		enc.Encode(result)
@@ -709,13 +714,12 @@ func {{$interface.Name}}_{{$method.Name}}(w http.ResponseWriter, r *http.Request
 		var methodUrl = api.baseurl + endpoint;
 		var message = JSON.stringify(input);
 		var req = $.ajax({
-			type: "POST",
+			type: "GET",
 			url: methodUrl,
 			crossDomain: true,
 			contentType:"application/javascript; charset=utf-8",
 			dataType:"jsonp",
-			processData: false,
-			data: message
+			data: "data="+message
 		});
 		req.done(function(data, textStatus, jqXHR) {
 			callback(data);
