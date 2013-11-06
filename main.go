@@ -84,6 +84,7 @@ func printserver(dir string, apiset *parser.APISet, apipkg string, impl string) 
 
 	apiset.ServerImports = []string{
 		"time",
+		"io",
 		"encoding/json",
 		apipkg,
 		impl,

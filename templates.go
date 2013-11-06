@@ -646,6 +646,11 @@ func {{$interface.Name}}_{{$method.Name}}(w http.ResponseWriter, r *http.Request
 	err := dec.Decode(&p)
 	var result {{$interface.Name}}_{{$method.Name}}_Results
 	enc := json.NewEncoder(w)
+	jsonpCallback := r.URL.Query().Get("callback")
+	if  jsonpCallback != "" {
+		io.WriteString(w, jsonpCallback + "(")
+		defer io.WriteString(w, ")")
+	}
 	if err != nil {
 		result.Err = NewError(err)
 		enc.Encode(result)
@@ -700,26 +705,54 @@ func {{$interface.Name}}_{{$method.Name}}(w http.ResponseWriter, r *http.Request
 			callback(data);
 		});
 	};
+	api.rpcjsonp = function(endpoint, input, callback) {
+		var methodUrl = api.baseurl + endpoint;
+		var message = JSON.stringify(input);
+		var req = $.ajax({
+			type: "POST",
+			url: methodUrl,
+			contentType:"application/javascript; charset=utf-8",
+			dataType:"jsonp",
+			processData: false,
+			data: message
+		});
+		req.done(function(data, textStatus, jqXHR) {
+			callback(data);
+		});
+	};
 })( window.{{.Name}} = window.{{.Name}} || {}, jQuery);
 
 
 
 (function( api, undefined ) {
+	api.jsonp = {}
 {{range .Interfaces}}{{ $interfaceName := .Name}}
 	api.{{$interfaceName}} = function() {};
+	api.jsonp.{{$interfaceName}} = function() {};
 {{range .Methods}}{{$method := .}}{{if .ConstructorForInterface}}
 	api.{{$interfaceName}}.prototype.{{.Name}} = function({{$method.ParamsForJavascriptFunction}}) {
 		var r = new api.{{.ConstructorForInterface.Name}}(){{range .Params}};
 		r.{{.Name | title}} = {{.Name}}{{end}};
 		return r;
-	}
+	};
+	api.jsonp.{{$interfaceName}}.prototype.{{.Name}} = function({{$method.ParamsForJavascriptFunction}}) {
+		var r = new api.jsonp.{{.ConstructorForInterface.Name}}(){{range .Params}};
+		r.{{.Name | title}} = {{.Name}}{{end}};
+		return r;
+	};
 {{else}}
 	api.{{$interfaceName}}.prototype.{{.Name}} = function({{$method.ParamsForJavascriptFunction}}{{if $method.ParamsForJavascriptFunction}}, {{end}}callback) {
 		api.rpc("/{{$interfaceName}}/{{.Name}}.json", {"This": this, "Params": {{$method.ParamsForJson}}}, function(data){
 			callback({{$method.ResultsForJavascriptFunction "data"}})
 		});
 		return;
-	}
+	};
+	api.jsonp.{{$interfaceName}}.prototype.{{.Name}} = function({{$method.ParamsForJavascriptFunction}}{{if $method.ParamsForJavascriptFunction}}, {{end}}callback) {
+		api.rpcjsonp("/{{$interfaceName}}/{{.Name}}.json", {"This": this, "Params": {{$method.ParamsForJson}}}, function(data){
+			callback({{$method.ResultsForJavascriptFunction "data"}})
+		});
+		return;
+	};
 {{end}}{{end}}{{end}}
 
 }( window.{{.Name}} = window.{{.Name}} || {} ));
