@@ -30,10 +30,12 @@ func main() {
 	apis := parser.Parse(buildpkg.Dir, *prefix)
 
 	switch *lang {
-	case "javascript":
-		printjavascript(*outdir, apis)
 	case "server":
 		printserver(*outdir, apis, *pkg, *impl)
+	case "javascript":
+		printjavascript(*outdir, apis)
+	case "golang":
+		printgolang(*outdir, apis, *pkg)
 	case "objc":
 		printobjc(*outdir, apis)
 	case "java":
@@ -102,6 +104,32 @@ func printserver(dir string, apiset *parser.APISet, apipkg string, impl string) 
 		panic(err)
 	}
 	err = tpl.ExecuteTemplate(f, "httpserver", apiset)
+	if err != nil {
+		panic(err)
+	}
+}
+
+func printgolang(dir string, apiset *parser.APISet, apipkg string) {
+
+	apiset.ServerImports = []string{
+		"bytes",
+		"time",
+		"io/ioutil",
+		"encoding/json",
+		apipkg,
+		"net/http",
+	}
+
+	tpl := codeTemplate()
+
+	p := filepath.Join(dir, apiset.Name+"httpimpl", "client.go")
+	os.Mkdir(filepath.Dir(p), 0755)
+	f, err := os.Create(p)
+	if err != nil {
+		panic(err)
+	}
+
+	err = tpl.ExecuteTemplate(f, "golang/interface", apiset)
 	if err != nil {
 		panic(err)
 	}

@@ -238,9 +238,20 @@ func parseField(n *ast.Field) (r []*Field) {
 			f.IsArray = true
 
 		case *ast.MapType:
-			k := nt.Key.(*ast.Ident)
-			v := nt.Value.(*ast.Ident)
-			f.Type = `[` + k.Name + `]` + v.Name
+			switch vt := nt.Key.(type) {
+			case *ast.Ident:
+				f.Type = `[` + vt.Name + `]`
+			case *ast.SelectorExpr:
+				f.Type = `[` + vt.X.(*ast.Ident).Name + "." + vt.Sel.Name + `]`
+			}
+
+			switch vt := nt.Value.(type) {
+			case *ast.Ident:
+				f.Type = f.Type + vt.Name
+			case *ast.SelectorExpr:
+				f.Type = f.Type + vt.X.(*ast.Ident).Name + "." + vt.Sel.Name
+			}
+
 			f.IsMap = true
 
 		}
