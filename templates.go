@@ -712,19 +712,19 @@ func ToJson(v interface{}) (r []byte) {
 {{end}}
 {{range .Methods}}{{$method := .}}
 	{{if .ConstructorForInterface}}
-	func (this *{{$interface.Name | title}}) {{$method.Name}}({{range $method.Params}}	{{.Name | snake}} {{.FullGoTypeName}},{{end}}) ({{range $method.Results}}{{.Name | snake}} {{.FullGoTypeName}},{{end}}){
+	func (this *{{$interface.Name | title}}) {{$method.Name}}({{$method.ParamsForGoClientFunction}}) ({{$method.ResultsForGoClientFunction}}){
 	{{.ConstructorForInterface.Name | snake}} = &{{.ConstructorForInterface.Name | title}}{
 		{{range $method.Params}}{{.Name | title}}: {{.Name | snake}},
 		{{end}}}
 	return
 	}
 	{{else}}	
-		type {{$interface.Name}}_{{$method.Name}}_Res struct {
+		type {{$interface.Name | snake}}_{{$method.Name}}_Results struct {
 			{{range .Results}}	{{.Name | title}} {{.FullGoTypeName}}
 			{{end}}
 		}
 
-		func (this *{{$interface.Name | title}}) {{$method.Name}}({{range $method.Params}}	{{.Name | snake}} {{.FullGoTypeName}},{{end}}) ({{range $method.Results}}{{.Name | snake}} {{.FullGoTypeName}},{{end}}){
+		func (this *{{$interface.Name | title}}) {{$method.Name}}({{$method.ParamsForGoClientFunction}}) ({{$method.ResultsForGoClientFunction}}){
 			bodyMap := make(map[string]interface{})
 			bodyMap["This"] = this
 			{{if $method.Params}}paramsMap := make(map[string]interface{})
@@ -734,7 +734,7 @@ func ToJson(v interface{}) (r []byte) {
 			if err != nil || resp.Body == nil {
 				return
 			}
-			var result {{$interface.Name}}_{{$method.Name}}_Res
+			var result {{$interface.Name | snake}}_{{$method.Name}}_Results
 			defer resp.Body.Close()
 			dec := json.NewDecoder(resp.Body)
 			err = dec.Decode(&result)

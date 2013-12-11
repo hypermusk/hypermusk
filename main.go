@@ -60,16 +60,11 @@ func codeTemplate() (tpl *template.Template) {
 	tpl = template.New("")
 	tpl = tpl.Funcs(template.FuncMap{
 		"title":       strings.Title,
-		"snake":       snake,
+		"snake":       parser.Snake,
 		"downcase":    strings.ToLower,
 		"dotlastname": dotLastName,
 	})
 	tpl = template.Must(tpl.Parse(Templates))
-	return
-}
-
-func snake(name string) (r string) {
-	r = strings.ToLower(name[:1]) + name[1:]
 	return
 }
 
@@ -122,7 +117,7 @@ func printgolang(dir string, apiset *parser.APISet, apipkg string) {
 
 	tpl := codeTemplate()
 
-	p := filepath.Join(dir, apiset.Name+"httpimpl", "client.go")
+	p := filepath.Join(dir, "client", "client.go")
 	os.Mkdir(filepath.Dir(p), 0755)
 	f, err := os.Create(p)
 	if err != nil {

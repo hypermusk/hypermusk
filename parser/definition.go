@@ -208,6 +208,29 @@ func (m *Method) ResultsForGoServerFunction(prefix string) (r string) {
 	return
 }
 
+func Snake(name string) (r string) {
+	r = strings.ToLower(name[:1]) + name[1:]
+	return
+}
+
+func (m *Method) ParamsForGoClientFunction() (r string) {
+	ps := []string{}
+	for _, p := range m.Params {
+		ps = append(ps, Snake(p.Name)+" "+p.FullGoTypeName())
+	}
+	r = strings.Join(ps, ", ")
+	return
+}
+
+func (m *Method) ResultsForGoClientFunction() (r string) {
+	rs := []string{}
+	for _, r := range m.Results {
+		rs = append(rs, Snake(r.Name)+" "+r.FullGoTypeName())
+	}
+	r = strings.Join(rs, ", ")
+	return
+}
+
 func (m *Method) ParamsForJson() (r string) {
 	ps := []string{}
 	for _, p := range m.Params {
