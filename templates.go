@@ -730,7 +730,7 @@ func ToJson(v interface{}) (r []byte) {
 			{{if $method.Params}}paramsMap := make(map[string]interface{})
 			{{range $method.Params}}paramsMap["{{.Name | title}}"] = {{.Name}}
 			{{end}}bodyMap["Params"] = paramsMap{{end}}
-			resp, err := http.DefaultClient.Post(ApiDomain+"/{{$interface.Name}}/{{.Name}}.json", "application/json", ioutil.NopCloser(bytes.NewReader(ToJson(bodyMap))))
+			resp, err := http.DefaultClient.Post(ApiDomain+"/{{$interface.Name}}/{{.Name}}.json", "application/json", bytes.NewReader(ToJson(bodyMap)))
 			if err != nil || resp.Body == nil {
 				return
 			}
