@@ -226,15 +226,18 @@ func parseField(n *ast.Field) (r []*Field) {
 			}
 
 		case *ast.ArrayType:
-			var tname *ast.Ident
-			st, isstar := nt.Elt.(*ast.StarExpr)
-			if isstar {
+			// var tname *ast.Ident
+
+			switch vt := nt.Elt.(type) {
+			case *ast.Ident:
+				f.Type = nt.Elt.(*ast.Ident).Name
+			case *ast.StarExpr:
 				f.Star = true
-				tname = st.X.(*ast.Ident)
-			} else {
-				tname = nt.Elt.(*ast.Ident)
+				f.Type = vt.X.(*ast.Ident).Name
+
+			case *ast.SelectorExpr:
+				f.Type = vt.X.(*ast.Ident).Name + "." + vt.Sel.Name
 			}
-			f.Type = tname.Name
 			f.IsArray = true
 
 		case *ast.MapType:
