@@ -212,10 +212,8 @@ func sortInterfaces(apiset *APISet) {
 
 func parseField(n *ast.Field) (r []*Field) {
 	for _, id := range n.Names {
-		f := &Field{}
-		r = append(r, f)
+		f := &Field{Name: id.Name}
 
-		f.Name = id.Name
 		switch nt := n.Type.(type) {
 		case *ast.Ident:
 			f.Type = nt.Name
@@ -244,19 +242,25 @@ func parseField(n *ast.Field) (r []*Field) {
 			switch vt := nt.Key.(type) {
 			case *ast.Ident:
 				f.Type = `[` + vt.Name + `]`
+				f.MapSpec[0] = vt.Name
 			case *ast.SelectorExpr:
 				f.Type = `[` + vt.X.(*ast.Ident).Name + "." + vt.Sel.Name + `]`
+				f.MapSpec[0] = vt.X.(*ast.Ident).Name + "." + vt.Sel.Name
 			}
 
 			switch vt := nt.Value.(type) {
 			case *ast.Ident:
 				f.Type = f.Type + vt.Name
+				f.MapSpec[1] = vt.Name
 			case *ast.SelectorExpr:
 				f.Type = f.Type + vt.X.(*ast.Ident).Name + "." + vt.Sel.Name
+				f.MapSpec[1] = vt.X.(*ast.Ident).Name + "." + vt.Sel.Name
 			}
 
 			f.IsMap = true
 		}
+
+		r = append(r, f)
 	}
 
 	return

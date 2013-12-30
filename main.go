@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"errors"
 	"flag"
 	"fmt"
@@ -21,7 +22,10 @@ var javapackage = flag.String("java_package", "", "the package of generated java
 
 func main() {
 	flag.Parse()
+	genApi()
+}
 
+func genApi() {
 	buildpkg, err := build.Default.Import(*pkg, "", 0)
 
 	if err != nil {
@@ -42,6 +46,12 @@ func main() {
 	case "java":
 		printjava(*outdir, apis, *javapackage)
 	}
+}
+
+func prettyPrint(v interface{}) {
+	cnt, err := json.MarshalIndent(v, "", "    ")
+	dieIf(err)
+	fmt.Println(string(cnt))
 }
 
 func die(err error) {

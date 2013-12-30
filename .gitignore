@@ -1,0 +1,6 @@
+tests/Api.h
+tests/Api.m
+tests/com/qortex/android/Api.java
+tests/com/qortex/android/RemoteError.java
+tests/com/qortex/android/Service.java
+tests/com/qortex/android/UseMap.java

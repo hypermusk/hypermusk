@@ -255,6 +255,7 @@ type Field struct {
 	ConstructorType             string
 	PkgName                     string
 	Prefix                      string
+	MapSpec                     [2]string
 }
 
 func (f Field) IsError() bool {
@@ -281,6 +282,9 @@ func (f Field) FullGoTypeName() (r string) {
 func (f Field) FullObjcTypeName() (r string) {
 	if f.IsArray {
 		return "NSArray *"
+	}
+	if f.IsMap {
+		return "NSDictionary *"
 	}
 	if f.Primitive {
 		r = f.Type
@@ -381,5 +385,6 @@ func (f Field) ToLanguageField(language string) (r Field) {
 	r.SetPropertyConvertFormatter = t.SetPropertyConvertFormatter
 	r.GetPropertyConvertFormatter = t.GetPropertyConvertFormatter
 	r.ConstructorType = t.ConstructorType
+	r.MapSpec = r.MapSpec
 	return
 }
