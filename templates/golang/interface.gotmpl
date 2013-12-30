@@ -42,7 +42,13 @@ func ToJson(v interface{}) (r []byte) {
 			{{range $method.Params}}paramsMap["{{.Name | title}}"] = {{.Name}}
 			{{end}}bodyMap["Params"] = paramsMap{{end}}
 			resp, err := http.DefaultClient.Post(ApiDomain+"/{{$interface.Name}}/{{.Name}}.json", "application/json", bytes.NewReader(ToJson(bodyMap)))
-			if err != nil || resp.Body == nil {
+			if err != nil {
+				return
+			}
+			if resp.StatusCode >= 300 {
+			   	errors.New("http error, status code:" + string(resp.StatusCode) + "status" + resp.Status)
+			}
+			if resp.Body == nil {
 				return
 			}
 			var result {{$interface.Name | snake}}_{{$method.Name}}_Results
