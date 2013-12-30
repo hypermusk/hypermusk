@@ -1,0 +1,41 @@
+{{define "objc/properties_m"}}
+{{range . }}{{$f := .ToLanguageField "objc"}}@synthesize {{$f.Name | title}};
+{{end}}
+- (id) initWithDictionary:(NSDictionary*)dict{
+	self = [super init];
+	if (!self) {
+		return self;
+	}
+	if (![dict isKindOfClass:[NSDictionary class]]) {
+		return self;
+	}
+{{range . }}{{$f := .ToLanguageField "objc"}}{{ $name := $f.Name | title }}{{if .IsError}}	[self set{{$name}}:[{{$f.Prefix}}{{$f.PkgName | title}} errorWithDictionary:{{$f.SetPropertyObjc}}]];{{else}}{{if $f.Primitive }}{{if $f.IsArray}}	[self set{{$name}}:{{$f.SetPropertyObjc}}];{{else}}	[self set{{$name}}:{{$name | $f.SetPropertyFromObjcDict}}];{{end}}{{else}}{{if $f.IsArray}}
+	NSMutableArray * m{{$name}} = [[NSMutableArray alloc] init];
+	NSArray * l{{$name}} = [dict valueForKey:@"{{$name}}"];
+	if ([l{{$name}} isKindOfClass:[NSArray class]]) {
+		for (NSDictionary * d in l{{$name}}) {
+			[m{{$name}} addObject: [[{{$f.Prefix}}{{$f.ConstructorType}} alloc] initWithDictionary:d]];
+		}
+		[self set{{$name}}:m{{$name}}];
+	}{{else}}
+	id dict{{$name}} = {{$name | $f.SetPropertyFromObjcDict}};
+	if ([dict{{$name}} isKindOfClass:[NSDictionary class]]){
+		[self set{{$name}}:[[{{$f.Prefix}}{{$f.ConstructorType}} alloc] initWithDictionary:dict{{$name}}]];
+	}{{end}}{{end}}{{end}}
+{{end}}
+	return self;
+}
+
+- (NSDictionary*) dictionary {
+	NSMutableDictionary * dict = [[NSMutableDictionary alloc] init];
+{{range . }}{{$f := .ToLanguageField "objc"}}{{ $name := $f.Name | title }}{{if $f.Primitive }}{{if $f.IsArray}}	[dict setValue:{{$f.GetPropertyObjc}} forKey:@"{{$name}}"];{{else}}	[dict setValue:{{$f.GetPropertyObjc | $f.GetPropertyToObjcDict}} forKey:@"{{$name}}"];{{end}}{{else}}{{if $f.IsArray}}
+	NSMutableArray * m{{$name}} = [[NSMutableArray alloc] init];
+	for ({{$f.Prefix}}{{$f.Type}} p in {{$name}}) {
+		[m{{$name}} addObject:[p dictionary]];
+	}
+	[dict setValue:m{{$name}} forKey:@"{{$name}}"];{{else}}	[dict setValue:[self.{{$name}} dictionary] forKey:@"{{$name}}"];{{end}}
+	{{end}}
+{{end}}
+	return dict;
+}
+{{end}}

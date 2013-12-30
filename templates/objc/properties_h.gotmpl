@@ -1,0 +1,6 @@
+{{define "objc/properties_h"}}
+{{range .}}{{$f := .ToLanguageField "objc"}}@property {{$f.PropertyAnnotation}} {{$f.FullObjcTypeName}} {{.Name | title}};
+{{end}}
+- (id) initWithDictionary:(NSDictionary*)dict;
+- (NSDictionary*) dictionary;
+{{end}}

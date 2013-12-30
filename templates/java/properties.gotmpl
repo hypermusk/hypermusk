@@ -1,0 +1,15 @@
+{{define "java/properties"}}
+{{range . }}{{$f := .ToLanguageField "java"}}	@SerializedName("{{$f.Name | title}}")
+	private {{$f.FullJavaTypeName}} _{{$f.Name | snake}};
+
+{{end}}
+
+{{range . }}{{$f := .ToLanguageField "java"}}	public {{$f.FullJavaTypeName}} get{{$f.Name | title }}() {
+		return this._{{$f.Name | snake}};
+	}
+	public void set{{$f.Name | title }}({{$f.FullJavaTypeName}} _{{$f.Name | snake}}) {
+		this._{{$f.Name | snake}} = _{{$f.Name | snake}};
+	}
+
+{{end}}
+{{end}}

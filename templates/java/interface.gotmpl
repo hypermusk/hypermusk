@@ -1,0 +1,70 @@
+{{define "java/interface"}}
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Date;
+import com.google.gson.annotations.SerializedName;
+import com.google.gson.Gson;
+import java.io.Serializable;
+
+public class {{.Interface.Name}} implements Serializable {
+{{$apiprefix := .Prefix}}{{$interface := .Interface}}{{$pkgName := .PkgName}}{{$interfaceName := .Interface.Name}}
+{{with .Interface}}{{with .Constructor}}
+{{template "java/properties" .Method.Params}}
+{{end}}
+
+{{range .Methods}}{{$method := .}}
+
+	{{with .ConstructorForInterface}}public {{$apiprefix}}{{.Name}} {{else}}
+	// --- {{.Name}}Params ---
+	public static class {{.Name}}Params {
+		{{template "java/properties" .Params}}
+	}
+	// --- {{.Name}}Results ---
+	public static class {{.Name}}Results {
+		{{template "java/properties" .Results}}
+	}
+	// --- {{.Name}} ---
+	public {{$interface.Name | .ResultsForJavaFunction}} {{end}}{{.Name | snake}}({{.ParamsForJavaFunction}}) {
+	{{with .ConstructorForInterface}}
+	{{$apiprefix}}{{.Name}} results = new {{$apiprefix}}{{.Name}}();
+	{{range .Constructor.Method.Params}}{{$f := .ToLanguageField "java"}}results.set{{$f.Name | title}}({{$f.Name}});
+	{{end}}{{else}}
+	{{.Name}}Results results = null;
+	{{.Name}}Params params = new {{.Name}}Params();
+	{{range .Params}}{{$f := .ToLanguageField "java"}}params.set{{$f.Name | title}}({{$f.Name}});
+	{{end}}
+	{{$apiprefix}}{{$pkgName}} _api = {{$apiprefix}}{{$pkgName}}.get();
+
+	Gson gson = _api.gson();
+
+	Map m = new HashMap();
+	m.put("Params", params);
+	m.put("This", this);
+
+	String url = String.format("%s/{{$interfaceName}}/{{$method.Name}}.json", _api.getBaseURL());
+	String requestBody = gson.toJson(m);
+	Qortexapi.RequestResult r = Qortexapi.request(url, requestBody);
+
+	if (r.getErr() != null) {
+		results = new {{.Name}}Results();
+		results.setErr(r.getErr());
+		return {{$method.JavaReturnResultsOrOnlyOne}};
+	}
+
+	results = gson.fromJson(r.getReader(), {{$method.Name}}Results.class);
+	try {
+		r.getReader().close();
+	} catch (IOException e) {
+	}
+
+	{{end}}
+
+	return {{$method.JavaReturnResultsOrOnlyOne}};
+	}
+{{end}}
+{{end}}
+}
+
+{{end}}

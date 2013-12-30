@@ -1,0 +1,12 @@
+{{define "java/dataobject"}}
+{{if .HasTimeType}}import java.util.Date;{{end}}
+{{if .HasArrayType}}import java.util.ArrayList;{{end}}
+{{if .HasMapType}}import java.util.Map;{{end}}
+import com.google.gson.annotations.SerializedName;
+import java.io.Serializable;
+
+public class {{.Name}} implements Serializable {
+{{template "java/properties" .Fields}}
+}
+
+{{end}}

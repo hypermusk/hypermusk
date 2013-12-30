@@ -383,12 +383,3 @@ func (f Field) ToLanguageField(language string) (r Field) {
 	r.ConstructorType = t.ConstructorType
 	return
 }
-
-type APISet struct {
-	Name          string
-	Prefix        string
-	ImplPkg       string
-	ServerImports []string
-	Interfaces    []*Interface
-	DataObjects   []*DataObject
-}

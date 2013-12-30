@@ -9,8 +9,26 @@ import (
 	"sort"
 )
 
-func Parse(dir string, prefix string) (r *APISet) {
+type Walker struct {
+	fset              *token.FileSet
+	APISet            *APISet
+	currentName       string
+	currentInterface  *Interface
+	currentDataObject *DataObject
+	currentMethod     *Method
+	currentFieldList  *[]Field
+}
 
+type APISet struct {
+	Name          string
+	Prefix        string
+	ImplPkg       string
+	ServerImports []string
+	Interfaces    []*Interface
+	DataObjects   []*DataObject
+}
+
+func Parse(dir string, prefix string) (r *APISet) {
 	fset := token.NewFileSet()
 
 	astPkgs, _ := parser.ParseDir(fset, dir, nil, 0)
@@ -34,19 +52,8 @@ func Parse(dir string, prefix string) (r *APISet) {
 	return
 }
 
-type Walker struct {
-	fset              *token.FileSet
-	APISet            *APISet
-	currentName       string
-	currentInterface  *Interface
-	currentDataObject *DataObject
-	currentMethod     *Method
-	currentFieldList  *[]Field
-}
-
 // Visit implements the ast.Visitor interface.
 func (w *Walker) Visit(node ast.Node) ast.Visitor {
-
 	switch n := node.(type) {
 	case *ast.Package:
 		w.APISet.Name = n.Name
@@ -87,11 +94,9 @@ func (w *Walker) Visit(node ast.Node) ast.Visitor {
 			w.currentDataObject = nil
 			w.currentFieldList = nil
 		}
-
 	case *ast.Field:
 		if w.currentInterface != nil && len(n.Names) > 0 {
 			w.currentName = n.Names[0].Name
-			// fmt.Println(w.currentName)
 		}
 
 		if w.currentDataObject != nil && len(n.Names) > 0 {
@@ -99,6 +104,7 @@ func (w *Walker) Visit(node ast.Node) ast.Visitor {
 			w.currentDataObject.Fields = append(w.currentDataObject.Fields, fs...)
 		}
 	}
+
 	return w
 }
 
@@ -175,7 +181,6 @@ func depth(n Node, maxdepth int) (r int) {
 	if maxdepth < 0 {
 		panic("loop dependency: " + n.NodeName())
 	}
-	// println(n.NodeName())
 
 	if len(n.Children()) == 0 {
 		return 1
@@ -188,7 +193,6 @@ func depth(n Node, maxdepth int) (r int) {
 		if n.NodeName() == c.NodeName() {
 			continue
 		}
-		// println("=> ", maxdepth, ":", c.NodeName())
 		d := depth(c, maxdepth)
 		if d > max {
 			max = d
@@ -210,6 +214,7 @@ func parseField(n *ast.Field) (r []*Field) {
 	for _, id := range n.Names {
 		f := &Field{}
 		r = append(r, f)
+
 		f.Name = id.Name
 		switch nt := n.Type.(type) {
 		case *ast.Ident:
@@ -224,22 +229,17 @@ func parseField(n *ast.Field) (r []*Field) {
 			case *ast.SelectorExpr:
 				f.Type = xt.X.(*ast.Ident).Name + "." + xt.Sel.Name
 			}
-
 		case *ast.ArrayType:
-			// var tname *ast.Ident
-
 			switch vt := nt.Elt.(type) {
 			case *ast.Ident:
 				f.Type = nt.Elt.(*ast.Ident).Name
 			case *ast.StarExpr:
 				f.Star = true
 				f.Type = vt.X.(*ast.Ident).Name
-
 			case *ast.SelectorExpr:
 				f.Type = vt.X.(*ast.Ident).Name + "." + vt.Sel.Name
 			}
 			f.IsArray = true
-
 		case *ast.MapType:
 			switch vt := nt.Key.(type) {
 			case *ast.Ident:
@@ -256,9 +256,8 @@ func parseField(n *ast.Field) (r []*Field) {
 			}
 
 			f.IsMap = true
-
 		}
 	}
-	return
 
+	return
 }

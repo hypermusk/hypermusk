@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"flag"
 	"fmt"
 	"github.com/hypermusk/hypermusk/parser"
@@ -41,20 +42,22 @@ func main() {
 	case "java":
 		printjava(*outdir, apis, *javapackage)
 	}
-
 }
 
-func die(message interface{}) {
-	fmt.Println(message)
+func die(err error) {
+	fmt.Println(err)
 	os.Exit(0)
 }
 
-func dieIf(message interface{}, condition bool) {
-	if !condition {
+func dieIf(err error) {
+	if err == nil {
 		return
 	}
-	die(message)
+
+	die(err)
 }
+
+var rootPath = os.Getenv("GOPATH") + "/src/github.com/hypermusk/hypermusk"
 
 func codeTemplate() (tpl *template.Template) {
 	tpl = template.New("")
@@ -64,7 +67,8 @@ func codeTemplate() (tpl *template.Template) {
 		"downcase":    strings.ToLower,
 		"dotlastname": dotLastName,
 	})
-	tpl = template.Must(tpl.Parse(Templates))
+	tpl = template.Must(tpl.ParseGlob(rootPath + "/templates/*.gotmpl"))
+	tpl = template.Must(tpl.ParseGlob(rootPath + "/templates/**/*.gotmpl"))
 	return
 }
 
@@ -76,7 +80,7 @@ func dotLastName(pkg string) (r string) {
 
 func printserver(dir string, apiset *parser.APISet, apipkg string, impl string) {
 	if impl == "" {
-		die("must use -impl=your.package/full/path to give implementation package")
+		die(errors.New("must use -impl=your.package/full/path to give implementation package"))
 	}
 
 	apiset.ServerImports = []string{
@@ -105,7 +109,6 @@ func printserver(dir string, apiset *parser.APISet, apipkg string, impl string) 
 }
 
 func printgolang(dir string, apiset *parser.APISet, apipkg string) {
-
 	apiset.ServerImports = []string{
 		"bytes",
 		"time",
@@ -120,21 +123,20 @@ func printgolang(dir string, apiset *parser.APISet, apipkg string) {
 	p := filepath.Join(dir, "client", "client.go")
 	os.Mkdir(filepath.Dir(p), 0755)
 	f, err := os.Create(p)
-	if err != nil {
-		panic(err)
-	}
+	dieIf(err)
 
 	err = tpl.ExecuteTemplate(f, "golang/interface", apiset)
-	if err != nil {
-		panic(err)
-	}
+	dieIf(err)
 }
 
 func printjava(dir string, apiset *parser.APISet, javapackage string) {
-	dieIf("must use -java_package=com.qortex.android to give java package", javapackage == "")
+	if javapackage == "" {
+		die(errors.New("must use -java_package=com.qortex.android to give java package"))
+	}
+
 	filedir := filepath.Join(dir, strings.Replace(javapackage, ".", "/", -1))
 	err1 := os.MkdirAll(filedir, 0755)
-	dieIf(err1, err1 != nil)
+	dieIf(err1)
 	tpl := codeTemplate()
 
 	for _, dataobj := range apiset.DataObjects {
@@ -156,29 +158,29 @@ func printjava(dir string, apiset *parser.APISet, javapackage string) {
 func writeSingleJavaFile(tpl *template.Template, filedir string, javapackage string, templateName string, name string, data interface{}) {
 	jfile, err := os.Create(filepath.Join(filedir, strings.Title(name)+".java"))
 	defer jfile.Close()
-	dieIf(err, err != nil)
+	dieIf(err)
 	fmt.Fprintf(jfile, "package %s;\n\n", javapackage)
 	err = tpl.ExecuteTemplate(jfile, templateName, data)
-	dieIf(err, err != nil)
+	dieIf(err)
 }
 
 func printobjc(dir string, apiset *parser.APISet) {
 	tpl := codeTemplate()
 	hfile, err1 := os.Create(filepath.Join(dir, strings.Title(apiset.Name)+".h"))
-	dieIf(err1, err1 != nil)
+	dieIf(err1)
 	mfile, err2 := os.Create(filepath.Join(dir, strings.Title(apiset.Name)+".m"))
-	dieIf(err2, err2 != nil)
+	dieIf(err2)
 	err3 := tpl.ExecuteTemplate(hfile, "objc/h", apiset)
-	dieIf(err3, err3 != nil)
+	dieIf(err3)
 	err4 := tpl.ExecuteTemplate(mfile, "objc/m", apiset)
-	dieIf(err4, err4 != nil)
+	dieIf(err4)
 }
 
 func printjavascript(dir string, apiset *parser.APISet) {
 	tpl := codeTemplate()
 	p := filepath.Join(dir, apiset.Name+".js")
 	f, err := os.Create(p)
-	dieIf(err, err != nil)
+	dieIf(err)
 	err = tpl.ExecuteTemplate(f, "javascript/interfaces", apiset)
-	dieIf(err, err != nil)
+	dieIf(err)
 }
