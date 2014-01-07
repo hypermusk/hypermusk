@@ -661,6 +661,7 @@ func {{$interface.Name}}_{{$method.Name}}(w http.ResponseWriter, r *http.Request
 		enc.Encode(result)
 		return
 	}
+	fmt.Printf("api call method: {{$method.Name}}, params: %+v \n", p.Params)
 {{if $interface.Constructor}}
 	s, err := {{$interface.Constructor.FromInterface.Name | downcase }}.{{$interface.Constructor.Method.Name}}({{$interface.Constructor.Method.ParamsForGoServerConstructorFunction}})
 {{else}}

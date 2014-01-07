@@ -87,6 +87,7 @@ func printserver(dir string, apiset *parser.APISet, apipkg string, impl string) 
 		apipkg,
 		impl,
 		"net/http",
+		"fmt",
 	}
 	apiset.ImplPkg = impl
 
