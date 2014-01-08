@@ -5,12 +5,13 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"github.com/hypermusk/hypermusk/parser"
 	"go/build"
 	"os"
 	"path/filepath"
 	"strings"
 	"text/template"
+
+	"github.com/hypermusk/hypermusk/parser"
 )
 
 var pkg = flag.String("pkg", "", "Put a full go package path like 'github.com/theplant/qortexapi', make sure you did 'go get github.com/theplant/qortexapi'")
@@ -101,7 +102,8 @@ func printserver(dir string, apiset *parser.APISet, apipkg string, impl string) 
 		apipkg,
 		impl,
 		"net/http",
-		"fmt",
+		// "fmt",
+		"log",
 	}
 	apiset.ImplPkg = impl
 
