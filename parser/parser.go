@@ -84,7 +84,7 @@ func (w *Walker) Visit(node ast.Node) ast.Visitor {
 				}
 			}
 			if len(w.currentMethod.Results) == 0 {
-				die("method " + w.currentName + " must have return values or must have return value names like (entry *Entry, err error)")
+				die("method " + w.currentName + " must have return values in forms like this: (entry *Entry, err error)")
 			} else {
 				if w.currentMethod.Results[len(w.currentMethod.Results)-1].Type != "error" {
 					die("method " + w.currentMethod.Name + " of " + w.currentInterface.Name + "'s must additionally return 'err error'")
@@ -108,6 +108,21 @@ func (w *Walker) Visit(node ast.Node) ast.Visitor {
 	return w
 }
 
+/*
+If in the api packages, there are two interfaces like this:
+
+	type Manager interface {
+		login(name, password string) api API
+	}
+
+	type API interface {
+		getProfiile(name string) (profile string)
+	}
+
+Then Manager will be the constructor of API, for Manage has functions that would return API.
+This would be reflect in client packages, like in objective-c, accessing instances of API
+would have to go through Manager. This is could be used as a kind of authentication mechanism.
+*/
 func updateConstructors(apiset *APISet) {
 	for _, inf := range apiset.Interfaces {
 		for _, inftarget := range apiset.Interfaces {
