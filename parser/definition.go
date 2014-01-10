@@ -107,21 +107,57 @@ func (m *Method) ParamsForJavascriptFunction() (r string) {
 	return
 }
 
-func (m *Method) ParamsForObjcFunction() (r string) {
+// In objective-c, method name will be the name of the first parameters
+func (m *Method) ParamsForObjcFunctionWithCallback(apiprefix, interfaceName string) (r string) {
+	ps := m.paramsForObj()
+
+	successBlockParams := ""
+	if m.ConstructorForInterface != nil {
+		interName := m.ConstructorForInterface.Name
+		successBlockParams = apiprefix + interName + "* " + interName
+	} else {
+		suffix := "results"
+		if len(m.Results) == 1 {
+			suffix = "error"
+		}
+		successBlockParams = m.ResultsForObjcFunction(interfaceName) + suffix
+	}
+
 	if len(m.Params) == 0 {
-		r = m.Name
-		return
+		ps[0] = ps[0] + ":(void (^)(" + successBlockParams + "))successBlock"
+	} else {
+		ps = append(ps, "success:(void (^)("+successBlockParams+"))successBlock")
+	}
+	ps = append(ps, "failure:(void (^)(NSError *error))failureBlock")
+
+	r = strings.Join(ps, " ")
+	return r
+}
+
+func (m *Method) paramsForObj() []string {
+	if len(m.Params) == 0 {
+		return []string{m.Name}
 	}
 
 	ps := []string{}
 	for i, p := range m.Params {
 		op := p.ToLanguageField("objc")
 		name := op.Name
+
 		if i == 0 {
 			name = m.Name
 		}
+
 		ps = append(ps, name+":("+op.FullObjcTypeName()+")"+op.Name)
 	}
+
+	return ps
+}
+
+// see Method#ParamsForObjcFunctionWithCallback
+func (m *Method) ParamsForObjcFunction() (r string) {
+	ps := m.paramsForObj()
+
 	r = strings.Join(ps, " ")
 	return
 }
@@ -163,10 +199,22 @@ func (m *Method) ResultsForObjcFunction(interfaceName string) (r string) {
 		return
 	}
 	if len(m.Results) == 0 {
-		panic("method " + m.Name + "returned zero values")
+		name := m.Name
+		// if lowerMethod {
+		// 	name = lowerFirstLetter(name)
+		// 	println(name)
+		// }
+		panic("method " + name + "returned zero values")
 	}
 	r = m.Results[0].ToLanguageField("objc").Type
 	return
+}
+
+func lowerFirstLetter(name string) string {
+	if len(name) == 1 {
+		return strings.ToLower(name)
+	}
+	return strings.ToLower(string(name[0])) + name[1:]
 }
 
 func (m *Method) ResultsForJavaFunction(interfaceName string) (r string) {

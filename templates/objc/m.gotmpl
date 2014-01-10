@@ -77,6 +77,39 @@ static NSDateFormatter * _dateFormatter;
 	return [NSJSONSerialization JSONObjectWithData:returnData options:NSJSONReadingAllowFragments error:error];
 }
 
++ (void)request:(NSURL*)url
+	 parameters:(NSDictionary *)parameters
+completionHandler:(void (^)(NSDictionary *results, NSError *error))completionHandler {
+	__block NSError *error = nil;
+	NSOperationQueue *queue = [[NSOperationQueue alloc] init];
+
+	NSMutableURLRequest *httpRequest = [NSMutableURLRequest requestWithURL:url];
+	[httpRequest setHTTPMethod:@"POST"];
+	[httpRequest setValue:@"application/json;charset=utf-8" forHTTPHeaderField:@"Content-Type"];
+	QXQortexapi * _api = [QXQortexapi get];
+
+	NSData *requestBody = [NSJSONSerialization dataWithJSONObject:parameters options:NSJSONWritingPrettyPrinted error:&error];
+	if([_api Verbose]) {
+		NSLog(@"Request: %@", [NSString stringWithUTF8String:[requestBody bytes]]);
+	}
+	[httpRequest setHTTPBody:requestBody];
+
+	[NSURLConnection sendAsynchronousRequest:httpRequest
+									   queue:queue
+						   completionHandler:^(NSURLResponse *response, NSData *data, NSError *connectionError) {
+							   if([_api Verbose]) {
+								   NSLog(@"Response: %@", [NSString stringWithUTF8String:[data bytes]]);
+								   NSLog(@"Connection Error: %@", connectionError);
+							   }
+
+							   if (completionHandler) {
+								   NSDictionary *results = [NSJSONSerialization JSONObjectWithData:data options:NSJSONReadingAllowFragments error:&error];
+
+								   completionHandler(results, error);
+							   }
+						   }];
+}
+
 + (NSError *)errorWithDictionary:(NSDictionary *)dict {
 	if (![dict isKindOfClass:[NSDictionary class]]) {
 		return nil;
@@ -168,8 +201,42 @@ static NSDateFormatter * _dateFormatter;
 	{{end}}
 	return {{$method.ObjcReturnResultsOrOnlyOne}};
 }
+
+- (void) {{.ParamsForObjcFunctionWithCallback $apiprefix $interface.Name}} {
+	{{with .ConstructorForInterface}}
+		{{$apiprefix}}{{.Name}} *results = [{{$apiprefix}}{{.Name}} alloc];
+		{{range .Constructor.Method.Params}}
+			{{$f := .ToLanguageField "objc"}}[results set{{$f.Name | title}}:{{$f.Name}}];
+		{{end}}
+	{{else}}
+		// {{$apiprefix}}{{$interface.Name}}{{.Name}}Results *results = [{{$apiprefix}}{{$interface.Name}}{{.Name}}Results alloc];
+		{{$apiprefix}}{{$interface.Name}}{{.Name}}Params *params = [[{{$apiprefix}}{{$interface.Name}}{{.Name}}Params alloc] init];
+		{{range .Params}}{{$f := .ToLanguageField "objc"}}[params set{{$f.Name | title}}:{{$f.Name}}];
+		{{end}}
+
+		{{$apiprefix}}{{$pkgName}} * _api = [{{$apiprefix}}{{$pkgName}} get];
+		NSURL *url = [NSURL URLWithString:[NSString stringWithFormat:@"%@/{{$interface.Name}}/{{.Name}}.json", [_api BaseURL]]];
+		if([_api Verbose]) {
+			NSLog(@"Requesting URL: %@", url);
+		}
+
+		[QXQortexapi request:url parameters:@{@"This": [self dictionary], @"Params": [params dictionary]} completionHandler:^(NSDictionary *data, NSError *error) {
+			if (error && failureBlock) {
+				if([_api Verbose]) {
+					NSLog(@"Error: %@", error);
+				}
+
+				failureBlock(error);
+			}
+
+			if (successBlock) {
+				{{$apiprefix}}{{$interface.Name}}{{.Name}}Results *results = [{{$apiprefix}}{{$interface.Name}}{{.Name}}Results alloc];
+				results = [results initWithDictionary: data];
+				successBlock(results{{$rLen := len .Results}}{{if eq $rLen 1}}.Err{{end}});
+			}
+		}];
+	{{end}}
+}
 {{end}}@end
 {{end}}
-
-
 {{end}}
