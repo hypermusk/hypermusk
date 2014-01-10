@@ -109,7 +109,7 @@ func (m *Method) ParamsForJavascriptFunction() (r string) {
 
 // In objective-c, method name will be the name of the first parameters
 func (m *Method) ParamsForObjcFunctionWithCallback(apiprefix, interfaceName string) (r string) {
-	ps := m.paramsForObj()
+	ps := m.paramsForObj(true)
 
 	successBlockParams := ""
 	if m.ConstructorForInterface != nil {
@@ -134,9 +134,13 @@ func (m *Method) ParamsForObjcFunctionWithCallback(apiprefix, interfaceName stri
 	return r
 }
 
-func (m *Method) paramsForObj() []string {
+func (m *Method) paramsForObj(lowerMethod bool) []string {
+	mname := m.Name
+	if lowerMethod {
+		mname = lowerFirstLetter(mname)
+	}
 	if len(m.Params) == 0 {
-		return []string{m.Name}
+		return []string{mname}
 	}
 
 	ps := []string{}
@@ -145,7 +149,7 @@ func (m *Method) paramsForObj() []string {
 		name := op.Name
 
 		if i == 0 {
-			name = m.Name
+			name = mname
 		}
 
 		ps = append(ps, name+":("+op.FullObjcTypeName()+")"+op.Name)
@@ -156,7 +160,7 @@ func (m *Method) paramsForObj() []string {
 
 // see Method#ParamsForObjcFunctionWithCallback
 func (m *Method) ParamsForObjcFunction() (r string) {
-	ps := m.paramsForObj()
+	ps := m.paramsForObj(false)
 
 	r = strings.Join(ps, " ")
 	return
@@ -199,12 +203,7 @@ func (m *Method) ResultsForObjcFunction(interfaceName string) (r string) {
 		return
 	}
 	if len(m.Results) == 0 {
-		name := m.Name
-		// if lowerMethod {
-		// 	name = lowerFirstLetter(name)
-		// 	println(name)
-		// }
-		panic("method " + name + "returned zero values")
+		panic("method " + m.Name + "returned zero values")
 	}
 	r = m.Results[0].ToLanguageField("objc").Type
 	return
