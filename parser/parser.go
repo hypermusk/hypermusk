@@ -112,11 +112,11 @@ func (w *Walker) Visit(node ast.Node) ast.Visitor {
 If in the api packages, there are two interfaces like this:
 
 	type Manager interface {
-		login(name, password string) api API
+		login(name, password string) (api API, err error)
 	}
 
 	type API interface {
-		getProfiile(name string) (profile string)
+		getProfiile(name string) (profile string, err error)
 	}
 
 Then Manager will be the constructor of API, for Manage has functions that would return API.
