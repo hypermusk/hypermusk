@@ -36,7 +36,6 @@
 {{template "objc/properties_h" .Method.Params}}
 {{else}}- (NSDictionary*) dictionary;{{end}}
 {{range .Methods}}
-- {{with .ConstructorForInterface}}({{$apiprefix}}{{.Name}} *){{else}}({{.ResultsForObjcFunction $interface.Name}}){{end}} {{.ParamsForObjcFunction}};
 - (void) {{.ParamsForObjcFunctionWithCallback $apiprefix $interface.Name}};
 {{end}}@end
 {{end}}
