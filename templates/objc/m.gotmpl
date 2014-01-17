@@ -11,6 +11,9 @@ static NSDateFormatter * _dateFormatter;
 + ({{$apiprefix}}{{.Name | title}} *) get {
 	if(!_{{.Name}}) {
 		_{{.Name}} = [[{{$apiprefix}}{{.Name | title}} alloc] init];
+		if ([_qortexapi RequestTimeoutInterval] == 0) {
+			[_qortexapi setRequestTimeoutInterval:10];
+		}
 	}
 	return _{{.Name}};
 }
@@ -54,10 +57,11 @@ static NSDateFormatter * _dateFormatter;
 }
 
 + (NSDictionary *) request:(NSURL*)url req:(NSDictionary *)req error:(NSError **)error {
-	NSMutableURLRequest *httpRequest = [NSMutableURLRequest requestWithURL:url];
+	{{$apiprefix}}{{$pkgName}} * _api = [{{$apiprefix}}{{$pkgName}} get];
+	NSMutableURLRequest *httpRequest = [NSMutableURLRequest requestWithURL:url cachePolicy:NSURLRequestUseProtocolCachePolicy timeoutInterval:[_api RequestTimeoutInterval]];
+
 	[httpRequest setHTTPMethod:@"POST"];
 	[httpRequest setValue:@"application/json;charset=utf-8" forHTTPHeaderField:@"Content-Type"];
-	{{$apiprefix}}{{$pkgName}} * _api = [{{$apiprefix}}{{$pkgName}} get];
 	NSData *requestBody = [NSJSONSerialization dataWithJSONObject:req options:NSJSONWritingPrettyPrinted error:error];
 	if([_api Verbose]) {
 		NSLog(@"Request: %@", [NSString stringWithUTF8String:[requestBody bytes]]);
@@ -95,21 +99,21 @@ completionHandler:(void (^)(NSDictionary *results, NSError *error))completionHan
 	[httpRequest setHTTPBody:requestBody];
 
 	[NSURLConnection sendAsynchronousRequest:httpRequest
-									   queue:queue
-						   completionHandler:^(NSURLResponse *response, NSData *data, NSError *connectionError) {
-							   if([_api Verbose]) {
-								   NSLog(@"Response: %@", [NSString stringWithUTF8String:[data bytes]]);
-								   NSLog(@"Connection Error: %@", connectionError);
-							   }
+					   queue:queue
+			       completionHandler:^(NSURLResponse *response, NSData *data, NSError *connectionError) {
+						   if([_api Verbose]) {
+							   NSLog(@"Response: %@", [NSString stringWithUTF8String:[data bytes]]);
+							   NSLog(@"Connection Error: %@", connectionError);
+						   }
 
-							   if (completionHandler) {
-								   NSDictionary *results = [NSJSONSerialization JSONObjectWithData:data options:NSJSONReadingAllowFragments error:&error];
+						   if (completionHandler) {
+							   NSDictionary *results = [NSJSONSerialization JSONObjectWithData:data options:NSJSONReadingAllowFragments error:&error];
 
-									dispatch_async(dispatch_get_main_queue(), ^{
-										completionHandler(results, error);
-									});
-							   }
-						   }];
+								dispatch_async(dispatch_get_main_queue(), ^{
+									completionHandler(results, error);
+								});
+						   }
+						}];
 }
 
 + (NSError *)errorWithDictionary:(NSDictionary *)dict {

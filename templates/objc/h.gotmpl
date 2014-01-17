@@ -7,6 +7,7 @@
 @interface {{$apiprefix}}{{$pkgName}} : NSObject
 @property (nonatomic, strong) NSString * BaseURL;
 @property (nonatomic, assign) BOOL Verbose;
+@property (nonatomic, assign) NSTimeInterval RequestTimeoutInterval;
 + ({{$apiprefix}}{{$pkgName}} *) get;
 
 @end
