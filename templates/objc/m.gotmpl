@@ -179,6 +179,34 @@ completionHandler:(void (^)(NSDictionary *results, NSError *error))completionHan
 {{end}}
 {{range .Methods}}{{$method := .}}
 // --- {{.Name}} ---
+- {{with .ConstructorForInterface}}({{$apiprefix}}{{.Name}} *){{else}}({{$interface.Name | .ResultsForObjcFunction}}){{end}} {{.ParamsForObjcFunction}} {
+	{{with .ConstructorForInterface}}
+	{{$apiprefix}}{{.Name}} *results = [{{$apiprefix}}{{.Name}} alloc];
+	{{range .Constructor.Method.Params}}{{$f := .ToLanguageField "objc"}}[results set{{$f.Name | title}}:{{$f.Name}}];
+	{{end}}{{else}}
+	{{$apiprefix}}{{$interface.Name}}{{.Name}}Results *results = [{{$apiprefix}}{{$interface.Name}}{{.Name}}Results alloc];
+	{{$apiprefix}}{{$interface.Name}}{{.Name}}Params *params = [[{{$apiprefix}}{{$interface.Name}}{{.Name}}Params alloc] init];
+	{{range .Params}}{{$f := .ToLanguageField "objc"}}[params set{{$f.Name | title}}:{{$f.Name}}];
+	{{end}}
+	{{$apiprefix}}{{$pkgName}} * _api = [{{$apiprefix}}{{$pkgName}} get];
+	NSURL *url = [NSURL URLWithString:[NSString stringWithFormat:@"%@/{{$interface.Name}}/{{.Name}}.json", [_api BaseURL]]];
+	if([_api Verbose]) {
+		NSLog(@"Requesting URL: %@", url);
+	}
+	NSError *error;
+	NSDictionary * dict = [{{$apiprefix}}{{$pkgName}} request:url req:[NSDictionary dictionaryWithObjectsAndKeys: [self dictionary], @"This", [params dictionary], @"Params", nil] error:&error];
+	if(error != nil) {
+		if([_api Verbose]) {
+			NSLog(@"Error: %@", error);
+		}
+		results = [results init];
+		[results setErr:error];
+		return {{$method.ObjcReturnResultsOrOnlyOne}};
+	}
+	results = [results initWithDictionary: dict];
+	{{end}}
+	return {{$method.ObjcReturnResultsOrOnlyOne}};
+}
 
 - (void) {{.ParamsForObjcFunctionWithCallback $apiprefix $interface.Name}} {
 	{{with .ConstructorForInterface}}
