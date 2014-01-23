@@ -1,5 +1,5 @@
 {{define "objc/properties_h"}}
-{{range .}}{{$f := .ToLanguageField "objc"}}@property {{$f.PropertyAnnotation}} {{$f.FullObjcTypeName}} {{.Name | title}};
+{{range .}}{{$f := .ToLanguageField "objc"}}@property {{$f.PropertyAnnotation}} {{$f.FullObjcTypeName}} {{.Name | objsnake}};
 {{end}}
 - (id) initWithDictionary:(NSDictionary*)dict;
 - (NSDictionary*) dictionary;

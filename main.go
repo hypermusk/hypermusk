@@ -75,6 +75,7 @@ func codeTemplate() (tpl *template.Template) {
 	tpl = tpl.Funcs(template.FuncMap{
 		"title":       strings.Title,
 		"snake":       parser.Snake,
+		"objsnake":    parser.ObjcSnake,
 		"downcase":    strings.ToLower,
 		"dotlastname": dotLastName,
 	})

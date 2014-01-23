@@ -3,6 +3,7 @@ package parser
 import (
 	"fmt"
 	"strings"
+	"unicode"
 )
 
 type Node interface {
@@ -109,7 +110,7 @@ func (m *Method) ParamsForJavascriptFunction() (r string) {
 
 // In objective-c, method name will be the name of the first parameters
 func (m *Method) ParamsForObjcFunctionWithCallback(apiprefix, interfaceName string) (r string) {
-	ps := m.paramsForObj(true)
+	ps := m.paramsForObj()
 
 	successBlockParams := ""
 	if m.ConstructorForInterface != nil {
@@ -134,11 +135,8 @@ func (m *Method) ParamsForObjcFunctionWithCallback(apiprefix, interfaceName stri
 	return r
 }
 
-func (m *Method) paramsForObj(lowerMethod bool) []string {
-	mname := m.Name
-	if lowerMethod {
-		mname = lowerFirstLetter(mname)
-	}
+func (m *Method) paramsForObj() []string {
+	mname := lowerFirstLetter(m.Name)
 	if len(m.Params) == 0 {
 		return []string{mname}
 	}
@@ -160,7 +158,7 @@ func (m *Method) paramsForObj(lowerMethod bool) []string {
 
 // see Method#ParamsForObjcFunctionWithCallback
 func (m *Method) ParamsForObjcFunction() (r string) {
-	ps := m.paramsForObj(false)
+	ps := m.paramsForObj()
 
 	r = strings.Join(ps, " ")
 	return
@@ -183,7 +181,7 @@ func (m *Method) ParamsForJavaFunction() (r string) {
 
 func (m *Method) ObjcReturnResultsOrOnlyOne() (r string) {
 	if len(m.Results) == 1 {
-		r = "results." + strings.Title(m.Results[0].Name)
+		r = "results." + ObjcSnake(m.Results[0].Name)
 		return
 	}
 	return "results"
@@ -256,7 +254,27 @@ func (m *Method) ResultsForGoServerFunction(prefix string) (r string) {
 }
 
 func Snake(name string) (r string) {
+	// first two letters are upcase like URL, MD5, HTTPRequest etc, keep it as it is.
+	if len(name) >= 2 {
+		if unicode.IsUpper([]rune(name)[0]) && (unicode.IsUpper([]rune(name)[1]) || unicode.IsNumber([]rune(name)[1])) {
+			return name
+		}
+	}
+
 	r = strings.ToLower(name[:1]) + name[1:]
+	return
+}
+
+func ObjcSnake(name string) (r string) {
+
+	// if name start with "new", "alloc", "copy", "mutableCopy", make the first letter upper case.
+	r = Snake(name)
+	if strings.Index(r, "new") == 0 ||
+		strings.Index(r, "alloc") == 0 ||
+		strings.Index(r, "copy") == 0 ||
+		strings.Index(r, "mutableCopy") == 0 {
+		r = strings.ToUpper(name[:1]) + name[1:]
+	}
 	return
 }
 
@@ -382,7 +400,7 @@ func (f Field) GetPropertyToObjcDict(key string) (r string) {
 }
 
 func (f Field) GetPropertyObjc() (r string) {
-	r = "self." + strings.Title(f.Name)
+	r = "self." + ObjcSnake(f.Name)
 	return
 }
 
