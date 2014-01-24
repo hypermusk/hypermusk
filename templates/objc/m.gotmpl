@@ -7,6 +7,12 @@
 static {{$apiprefix}}{{.Name | title}} * _{{.Name}};
 static NSDateFormatter * _dateFormatter;
 
+@implementation NSData (NSString)
+- (NSString *) asUTF8String {
+    return [[NSString alloc] initWithData:self encoding:NSUTF8StringEncoding];
+}
+@end
+
 @implementation {{$apiprefix}}{{.Name | title}} : NSObject
 + ({{$apiprefix}}{{.Name | title}} *) get {
 	if(!_{{.Name}}) {
@@ -86,7 +92,7 @@ static NSDateFormatter * _dateFormatter;
 	[httpRequest setValue:@"gzip, deflate" forHTTPHeaderField:@"Accept-Encoding"];
 
 	if([_api verbose]) {
-		NSLog(@"Request: %@", [NSString stringWithUTF8String:[requestBody bytes]]);
+		NSLog(@"Request: %@", [requestBody asUTF8String]);
 	}
 
 	if(*error != nil) {
@@ -100,7 +106,7 @@ static NSDateFormatter * _dateFormatter;
 			return nil;
 		}
 		if([_api verbose]) {
-			NSLog(@"Response: %@", [NSString stringWithUTF8String:[returnData bytes]]);
+			NSLog(@"Response: %@", [returnData asUTF8String]);
 		}
 		return [NSJSONSerialization JSONObjectWithData:returnData options:NSJSONReadingAllowFragments error:error];
 	}
@@ -111,7 +117,7 @@ static NSDateFormatter * _dateFormatter;
 				completionHandler:^(NSURLResponse *response, NSData *data, NSError *connectionError) {
 					NSError *blockError = nil;
 					if([_api verbose]) {
-						NSLog(@"Response: %@", [NSString stringWithUTF8String:[data bytes]]);
+						NSLog(@"Response: %@", [data asUTF8String]);
 					}
 
 					NSDictionary *results = nil;
