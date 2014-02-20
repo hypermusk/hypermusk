@@ -107,8 +107,10 @@ completionHandler:(void (^)(NSDictionary *results, NSError *error))completionHan
 						   }
 
 						   if (completionHandler) {
-							   NSDictionary *results = [NSJSONSerialization JSONObjectWithData:data options:NSJSONReadingAllowFragments error:&error];
-
+							   NSDictionary *results = nil;
+							   if (data) {
+								   results = [NSJSONSerialization JSONObjectWithData:data options:NSJSONReadingAllowFragments error:&error];
+								}
 								dispatch_async(dispatch_get_main_queue(), ^{
 									completionHandler(results, error);
 								});
