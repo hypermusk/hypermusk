@@ -15,7 +15,7 @@
 
 {{range .DataObjects}}{{$do := .}}
 // --- {{.Name}} ---
-@interface {{$apiprefix}}{{.Name}} : NSObject
+@interface {{$apiprefix}}{{.Name}} : NSObject<NSCoding>
 {{template "objc/properties_h" $do.Fields}}
 @end
 {{end}}

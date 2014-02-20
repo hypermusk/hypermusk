@@ -26,6 +26,18 @@
 	return self;
 }
 
+- (id)initWithCoder:(NSCoder *)decoder {
+    NSDictionary *dict = [decoder decodeObjectForKey:@"dict"];
+
+    self = [self initWithDictionary:dict];
+
+    return self;
+}
+
+- (void)encodeWithCoder:(NSCoder *)encoder {
+    [encoder encodeObject:[self dictionary] forKey:@"dict"];
+}
+
 - (NSDictionary*) dictionary {
 	NSMutableDictionary * dict = [[NSMutableDictionary alloc] init];
 {{range . }}{{$f := .ToLanguageField "objc"}}{{ $name := $f.Name | title }}{{if $f.Primitive }}{{if $f.IsArray}}	[dict setValue:{{$f.GetPropertyObjc}} forKey:@"{{$name}}"];{{else}}	[dict setValue:{{$f.GetPropertyObjc | $f.GetPropertyToObjcDict}} forKey:@"{{$name}}"];{{end}}{{else}}{{if $f.IsArray}}
