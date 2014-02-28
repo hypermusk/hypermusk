@@ -101,20 +101,25 @@ completionHandler:(void (^)(NSDictionary *results, NSError *error))completionHan
 	[NSURLConnection sendAsynchronousRequest:httpRequest
 					   queue:queue
 			       completionHandler:^(NSURLResponse *response, NSData *data, NSError *connectionError) {
-						   if([_api verbose]) {
-							   NSLog(@"Response: %@", [NSString stringWithUTF8String:[data bytes]]);
-							   NSLog(@"Connection Error: %@", connectionError);
-						   }
+                            if([_api verbose]) {
+                                NSLog(@"Response: %@", [NSString stringWithUTF8String:[data bytes]]);
+                            }
 
-						   if (completionHandler) {
-							   NSDictionary *results = nil;
-							   if (data) {
-								   results = [NSJSONSerialization JSONObjectWithData:data options:NSJSONReadingAllowFragments error:&error];
-								}
-								dispatch_async(dispatch_get_main_queue(), ^{
-									completionHandler(results, error);
-								});
-						   }
+                            if (completionHandler) {
+                                NSDictionary *results = nil;
+
+                                if (connectionError) {
+                                    NSLog(@"Connection Error: %@", connectionError);
+                                    error = connectionError;
+                                } else if (data) {
+                                    results = [NSJSONSerialization JSONObjectWithData:data options:NSJSONReadingAllowFragments error:&error];
+                                    if (error) NSLog(@"Error decoding JSON: %@", error);
+                                }
+
+                                dispatch_async(dispatch_get_main_queue(), ^{
+                                    completionHandler(results, error);
+                                });
+                            }
 						}];
 }
 
