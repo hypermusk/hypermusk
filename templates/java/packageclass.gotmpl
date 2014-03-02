@@ -42,6 +42,8 @@ public class {{.Name | title}} {
 			// get rid of ":" in the last timezone 08:00 of 2013-07-16T14:26:41.499+08:00
 			if (dateString.charAt(len-3) == ':' && dateString.charAt(len-6) == '+') {
 				dateString = dateString.substring(0, len-3) + dateString.substring(len-2, len);
+			} else if (dateString.charAt(len-1) == 'Z') {
+				dateString = dateString.substring(0, len-1) + "+0000";
 			}
 
 			Date r = null;
