@@ -103,7 +103,7 @@ public class {{.Name | title}} {
 			conn.setDoOutput(true);
 
 			DataOutputStream wr = new DataOutputStream(conn.getOutputStream ());
-			wr.writeBytes(body);
+			wr.write(body.getBytes());
 			wr.flush();
 			wr.close();
 
