@@ -124,7 +124,6 @@ func printserver(dir string, apiset *parser.APISet, apipkg string, impl string) 
 func printgolang(dir string, apiset *parser.APISet, apipkg string) {
 	apiset.ServerImports = []string{
 		"bytes",
-		"time",
 		"errors",
 		"encoding/json",
 		apipkg,
