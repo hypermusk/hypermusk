@@ -1,5 +1,6 @@
 {{define "java/packageclass"}}
 
+import android.util.Log;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonDeserializationContext;
@@ -24,7 +25,9 @@ import java.util.Map;
 public class {{.Name | title}} {
 	public static {{.Name | title}} _instance;
 	public static String dateformat = "yyyy-MM-dd'T'HH:mm:ss.SSSZZZZ";
+	public static String dateformat2 = "yyyy-MM-dd'T'HH:mm:ssZZZZ";
 	private static SimpleDateFormat _formatter = new SimpleDateFormat(dateformat);
+	private static SimpleDateFormat _formatter2 = new SimpleDateFormat(dateformat2);
 
 	public static {{.Name | title}} get() {
 		if (_instance == null) {
@@ -50,7 +53,12 @@ public class {{.Name | title}} {
 			try {
 				r = _formatter.parse(dateString);
 			} catch (ParseException e) {
-			}
+				try {
+					r = _formatter2.parse(dateString);
+				} catch (ParseException e) {
+					Log.d("Exception", "Can't parse time " + e.getMessage());
+				}
+      }
 
 			return r;
 		}
