@@ -55,8 +55,8 @@ public class {{.Name | title}} {
 			} catch (ParseException e) {
 				try {
 					r = _formatter2.parse(dateString);
-				} catch (ParseException e) {
-					Log.d("Exception", "Can't parse time " + e.getMessage());
+				} catch (ParseException n) {
+					Log.d("Exception", "Can't parse time " + n.getMessage());
 				}
       }
 
