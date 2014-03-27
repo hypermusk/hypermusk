@@ -7,6 +7,7 @@ import (
 	"go/token"
 	"os"
 	"sort"
+	"strings"
 )
 
 type Walker struct {
@@ -95,6 +96,10 @@ func (w *Walker) Visit(node ast.Node) ast.Visitor {
 			w.currentFieldList = nil
 		}
 	case *ast.Field:
+		if isImportedField(n) {
+			break
+		}
+
 		if w.currentInterface != nil && len(n.Names) > 0 {
 			w.currentName = n.Names[0].Name
 		}
@@ -279,4 +284,30 @@ func parseField(n *ast.Field) (r []*Field) {
 	}
 
 	return
+}
+
+func isImportedField(f *ast.Field) bool {
+	walker := &importedFieldWalker{}
+	ast.Walk(walker, f.Type)
+	return walker.containsImported
+}
+
+type importedFieldWalker struct {
+	containsImported bool
+}
+
+const supportedSelectorExpr = "template.HTML,template.HTMLAttr,time.Time,govalidations.Validated,"
+
+func (i *importedFieldWalker) Visit(node ast.Node) ast.Visitor {
+	switch ftype := node.(type) {
+	case *ast.SelectorExpr:
+		if i.containsImported {
+			break
+		}
+
+		name := ftype.X.(*ast.Ident).Name + "." + ftype.Sel.Name + ","
+		i.containsImported = !strings.Contains(supportedSelectorExpr, name)
+	}
+
+	return i
 }
