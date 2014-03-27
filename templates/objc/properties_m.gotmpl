@@ -1,6 +1,4 @@
 {{define "objc/properties_m"}}
-{{range . }}{{$f := .ToLanguageField "objc"}}@synthesize {{$f.Name | objsnake}};
-{{end}}
 - (id) initWithDictionary:(NSDictionary*)dict{
 	self = [super init];
 	if (!self) {
@@ -42,7 +40,7 @@
 	NSMutableDictionary * dict = [[NSMutableDictionary alloc] init];
 {{range . }}{{$f := .ToLanguageField "objc"}}{{ $name := $f.Name | title }}{{if $f.Primitive }}{{if $f.IsArray}}	[dict setValue:{{$f.GetPropertyObjc}} forKey:@"{{$name}}"];{{else}}	[dict setValue:{{$f.GetPropertyObjc | $f.GetPropertyToObjcDict}} forKey:@"{{$name}}"];{{end}}{{else}}{{if $f.IsArray}}
 	NSMutableArray * m{{$name}} = [[NSMutableArray alloc] init];
-	for ({{$f.Prefix}}{{$f.Type}} p in {{$name | objsnake}}) {
+	for ({{$f.Prefix}}{{$f.Type}} p in self.{{$name | objsnake}}) {
 		[m{{$name}} addObject:[p dictionary]];
 	}
 	[dict setValue:m{{$name}} forKey:@"{{$name}}"];{{else}}	[dict setValue:[self.{{$name | objsnake}} dictionary] forKey:@"{{$name}}"];{{end}}
