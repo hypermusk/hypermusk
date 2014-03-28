@@ -14,8 +14,7 @@ func ToJson(v interface{}) (r []byte) {
 {{range .Interfaces}}{{$interface := .}}
 {{with .Constructor}}type {{$interface.Name | title}} struct {
 	{{range .Method.Params}}{{.Name | title}} {{.FullGoTypeName}}
-	}
-{{end}}{{end}}
+{{end}}}{{end}}
 {{with .Constructor}}
 {{else}}
 	type {{$interface.Name | title}} struct{}
