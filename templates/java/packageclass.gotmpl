@@ -22,11 +22,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.net.ssl.HttpsURLConnection;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.X509TrustManager;
-
 public class {{.Name | title}} {
 	public static {{.Name | title}} _instance;
 	public static String dateformat = "yyyy-MM-dd'T'HH:mm:ss.SSSZZZZ";
@@ -37,25 +32,6 @@ public class {{.Name | title}} {
 	public static {{.Name | title}} get() {
 		if (_instance == null) {
 			_instance = new {{.Name | title}}();
-      TrustManager[] trustAllCerts = new TrustManager[]{
-          new X509TrustManager() {
-              public java.security.cert.X509Certificate[] getAcceptedIssuers() {
-                  return null;
-              }
-              public void checkClientTrusted(java.security.cert.X509Certificate[] certs, String authType) {
-              }
-              public void checkServerTrusted(java.security.cert.X509Certificate[] certs, String authType) {
-              }
-          }
-      };
-
-      // Install the all-trusting trust manager
-      try {
-          SSLContext sc = SSLContext.getInstance("SSL");
-          sc.init(null, trustAllCerts, new java.security.SecureRandom());
-          HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
-      } catch (Exception e) {
-      }
 		}
 		return _instance;
 	}
