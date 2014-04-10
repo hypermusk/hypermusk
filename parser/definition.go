@@ -88,6 +88,7 @@ type Method struct {
 	Params                  []*Field
 	Results                 []*Field
 	ConstructorForInterface *Interface
+	IsStreamInput           bool
 }
 
 func (m *Method) ResultsForJavascriptFunction(prefix string) (r string) {
@@ -151,6 +152,10 @@ func (m *Method) paramsForObj() []string {
 		}
 
 		ps = append(ps, name+":("+op.FullObjcTypeName()+")"+op.Name)
+	}
+
+	if m.IsStreamInput {
+		ps = append(ps, "stream:(NSInputStream*)stream")
 	}
 
 	return ps

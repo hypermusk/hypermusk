@@ -77,7 +77,7 @@ func (w *Walker) Visit(node ast.Node) ast.Visitor {
 				fs := parseField(param)
 				w.currentMethod.Params = append(w.currentMethod.Params, fs...)
 			}
-
+			markIfStreamAndRemoveLastParam(w.currentMethod)
 			if n.Results != nil {
 				for _, result := range n.Results.List {
 					fs := parseField(result)
@@ -144,6 +144,30 @@ func updateConstructors(apiset *APISet) {
 			}
 		}
 	}
+}
+
+func markIfStreamAndRemoveLastParam(m *Method) {
+	if len(m.Params) == 0 {
+		return
+	}
+
+	count := 0
+	for _, p := range m.Params {
+		if p.Type == "io.Reader" {
+			count++
+		}
+	}
+
+	if count == 1 && m.Params[len(m.Params)-1].Type == "io.Reader" {
+		m.IsStreamInput = true
+		m.Params = m.Params[0 : len(m.Params)-1]
+	}
+
+	if count > 1 {
+		die(fmt.Sprintf("%s can NOT have more than one io.Reader parameters and it must be the last parameter", m.Name))
+	}
+	return
+
 }
 
 func die(message string) {
@@ -296,7 +320,7 @@ type importedFieldWalker struct {
 	containsImported bool
 }
 
-const supportedSelectorExpr = "template.HTML,template.HTMLAttr,time.Time,govalidations.Validated,"
+const supportedSelectorExpr = "template.HTML,template.HTMLAttr,time.Time,govalidations.Validated,io.Reader,"
 
 func (i *importedFieldWalker) Visit(node ast.Node) ast.Visitor {
 	switch ftype := node.(type) {

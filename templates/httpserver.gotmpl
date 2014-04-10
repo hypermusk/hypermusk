@@ -8,6 +8,9 @@ import ({{range .ServerImports}}
 )
 
 var _ = time.Sunday
+var _ = base64.StdEncoding
+
+const StreamHTTPHeaderFieldName = "X-HyperMuskStreamParams"
 
 type CodeError interface {
 	Code() string
@@ -71,6 +74,9 @@ func {{$interface.Name}}_{{$method.Name}}(w http.ResponseWriter, r *http.Request
 	w.Header().Add("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept")
 	w.Header().Add("Access-Control-Allow-Origin", "*")
 	var body io.Reader
+{{if $method.IsStreamInput}}
+	body = base64.NewDecoder(base64.StdEncoding, strings.NewReader(r.Header.Get(StreamHTTPHeaderFieldName)))
+{{else}}
 	jsonpCallback := r.URL.Query().Get("callback")
 	if  jsonpCallback != "" {
 		body = strings.NewReader(r.URL.Query().Get("data"))
@@ -80,9 +86,10 @@ func {{$interface.Name}}_{{$method.Name}}(w http.ResponseWriter, r *http.Request
 		if r.Body == nil {
 			panic("no body")
 		}
-		defer r.Body.Close()
 		body = r.Body
 	}
+{{end}}
+	defer r.Body.Close()
 
 	var p {{$interface.Name}}_{{$method.Name}}_Params
 
@@ -105,7 +112,7 @@ func {{$interface.Name}}_{{$method.Name}}(w http.ResponseWriter, r *http.Request
 		enc.Encode(result)
 		return
 	}
-	{{$method.ResultsForGoServerFunction "result"}} = s.{{$method.Name}}({{$method.ParamsForGoServerFunction}})
+	{{$method.ResultsForGoServerFunction "result"}} = s.{{$method.Name}}({{$method.ParamsForGoServerFunction}}{{if $method.IsStreamInput}}, r.Body{{end}})
 	if result.Err != nil {
 		result.Err = NewError(result.Err)
 	}

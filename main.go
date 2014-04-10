@@ -100,6 +100,7 @@ func printserver(dir string, apiset *parser.APISet, apipkg string, impl string) 
 		"io",
 		"strings",
 		"encoding/json",
+		"encoding/base64",
 		apipkg,
 		impl,
 		"net/http",

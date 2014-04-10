@@ -11,8 +11,8 @@ static NSDateFormatter * _dateFormatter;
 + ({{$apiprefix}}{{.Name | title}} *) get {
 	if(!_{{.Name}}) {
 		_{{.Name}} = [[{{$apiprefix}}{{.Name | title}} alloc] init];
-		if ([_qortexapi requestTimeoutInterval] == 0) {
-			[_qortexapi setRequestTimeoutInterval:10];
+		if ([_{{.Name}} requestTimeoutInterval] == 0) {
+			[_{{.Name}} setRequestTimeoutInterval:10];
 		}
 	}
 	return _{{.Name}};
@@ -56,72 +56,80 @@ static NSDateFormatter * _dateFormatter;
 	return dateString;
 }
 
-+ (NSDictionary *) request:(NSURL*)url req:(NSDictionary *)req error:(NSError **)error {
+
+
++ (NSDictionary *) request:(NSURL*)url
+		params:(NSDictionary *)params
+		stream:(NSInputStream*)stream
+		error:(NSError **)error
+		completionHandler:(void (^)(NSDictionary *results, NSError *error))completionHandler
+{
+
 	{{$apiprefix}}{{$pkgName}} * _api = [{{$apiprefix}}{{$pkgName}} get];
 	NSMutableURLRequest *httpRequest = [NSMutableURLRequest requestWithURL:url cachePolicy:NSURLRequestUseProtocolCachePolicy timeoutInterval:[_api requestTimeoutInterval]];
 
 	[httpRequest setHTTPMethod:@"POST"];
-	[httpRequest setValue:@"application/json;charset=utf-8" forHTTPHeaderField:@"Content-Type"];
-	NSData *requestBody = [NSJSONSerialization dataWithJSONObject:req options:NSJSONWritingPrettyPrinted error:error];
+	NSData *requestBody;
+	if (stream == nil) {
+		[httpRequest setValue:@"application/json;charset=utf-8" forHTTPHeaderField:@"Content-Type"];
+		requestBody = [NSJSONSerialization dataWithJSONObject:params options:NSJSONWritingPrettyPrinted error:error];
+		[httpRequest setHTTPBody:requestBody];
+	} else {
+		[httpRequest setValue:@"application/octet-stream" forHTTPHeaderField:@"Content-Type"];
+		requestBody = [NSJSONSerialization dataWithJSONObject:params options:0 error:error];
+		NSString *paramBase64 = [NSString stringWithUTF8String:[[requestBody base64EncodedDataWithOptions:NSDataBase64EncodingEndLineWithLineFeed] bytes]];
+		[httpRequest setValue:paramBase64 forHTTPHeaderField:@"X-HyperMuskStreamParams"];
+		[httpRequest setHTTPBodyStream:stream];
+	}
+
 	if([_api verbose]) {
 		NSLog(@"Request: %@", [NSString stringWithUTF8String:[requestBody bytes]]);
 	}
-	[httpRequest setHTTPBody:requestBody];
+
 	if(*error != nil) {
 		return nil;
 	}
-	NSURLResponse  *response = nil;
-	NSData *returnData = [NSURLConnection sendSynchronousRequest:httpRequest returningResponse:&response error:error];
-	if(*error != nil || returnData == nil) {
-		return nil;
-	}
-	if([_api verbose]) {
-		NSLog(@"Response: %@", [NSString stringWithUTF8String:[returnData bytes]]);
-	}
-	return [NSJSONSerialization JSONObjectWithData:returnData options:NSJSONReadingAllowFragments error:error];
-}
 
-+ (void)request:(NSURL*)url
-	 parameters:(NSDictionary *)parameters
-completionHandler:(void (^)(NSDictionary *results, NSError *error))completionHandler {
-	__block NSError *error = nil;
+	if (completionHandler == nil) {
+		NSURLResponse  *response = nil;
+		NSData *returnData = [NSURLConnection sendSynchronousRequest:httpRequest returningResponse:&response error:error];
+		if(*error != nil || returnData == nil) {
+			return nil;
+		}
+		if([_api verbose]) {
+			NSLog(@"Response: %@", [NSString stringWithUTF8String:[returnData bytes]]);
+		}
+		return [NSJSONSerialization JSONObjectWithData:returnData options:NSJSONReadingAllowFragments error:error];
+	}
+
 	NSOperationQueue *queue = [[NSOperationQueue alloc] init];
-
-	NSMutableURLRequest *httpRequest = [NSMutableURLRequest requestWithURL:url];
-	[httpRequest setHTTPMethod:@"POST"];
-	[httpRequest setValue:@"application/json;charset=utf-8" forHTTPHeaderField:@"Content-Type"];
-	QXQortexapi * _api = [QXQortexapi get];
-
-	NSData *requestBody = [NSJSONSerialization dataWithJSONObject:parameters options:NSJSONWritingPrettyPrinted error:&error];
-	if([_api verbose]) {
-		NSLog(@"Request: %@", [NSString stringWithUTF8String:[requestBody bytes]]);
-	}
-	[httpRequest setHTTPBody:requestBody];
-
 	[NSURLConnection sendAsynchronousRequest:httpRequest
-					   queue:queue
-			       completionHandler:^(NSURLResponse *response, NSData *data, NSError *connectionError) {
-                            if([_api verbose]) {
-                                NSLog(@"Response: %@", [NSString stringWithUTF8String:[data bytes]]);
-                            }
+				queue:queue
+				completionHandler:^(NSURLResponse *response, NSData *data, NSError *connectionError) {
+					NSError *blockError = nil;
+					if([_api verbose]) {
+						NSLog(@"Response: %@", [NSString stringWithUTF8String:[data bytes]]);
+					}
 
-                            if (completionHandler) {
-                                NSDictionary *results = nil;
+					NSDictionary *results = nil;
 
-                                if (connectionError) {
-                                    NSLog(@"Connection Error: %@", connectionError);
-                                    error = connectionError;
-                                } else if (data) {
-                                    results = [NSJSONSerialization JSONObjectWithData:data options:NSJSONReadingAllowFragments error:&error];
-                                    if (error) NSLog(@"Error decoding JSON: %@", error);
-                                }
+					if (connectionError) {
+					    NSLog(@"Connection Error: %@", connectionError);
+					    blockError = connectionError;
+					} else if (data) {
+					    results = [NSJSONSerialization JSONObjectWithData:data options:NSJSONReadingAllowFragments error:&blockError];
+					    if (blockError) NSLog(@"Error decoding JSON: %@", blockError);
+					}
 
-                                dispatch_async(dispatch_get_main_queue(), ^{
-                                    completionHandler(results, error);
-                                });
-                            }
-						}];
+					dispatch_async(dispatch_get_main_queue(), ^{
+					    completionHandler(results, blockError);
+					});
+				}];
+	return nil;
+
 }
+
+
 
 + (NSError *)errorWithDictionary:(NSDictionary *)dict {
 	if (![dict isKindOfClass:[NSDictionary class]]) {
@@ -201,7 +209,12 @@ completionHandler:(void (^)(NSDictionary *results, NSError *error))completionHan
 		NSLog(@"Requesting URL: %@", url);
 	}
 	NSError *error;
-	NSDictionary * dict = [{{$apiprefix}}{{$pkgName}} request:url req:[NSDictionary dictionaryWithObjectsAndKeys: [self dictionary], @"This", [params dictionary], @"Params", nil] error:&error];
+	NSDictionary *paramsDict = @{@"This": [self dictionary], @"Params": [params dictionary]};
+{{if $method.IsStreamInput}}
+	NSDictionary * dict = [{{$apiprefix}}{{$pkgName}} request:url params:paramsDict stream:stream error:&error completionHandler:nil];
+{{else}}
+	NSDictionary * dict = [{{$apiprefix}}{{$pkgName}} request:url params:paramsDict stream:nil error:&error completionHandler:nil];
+{{end}}
 	if(error != nil) {
 		if([_api verbose]) {
 			NSLog(@"Error: %@", error);
@@ -222,7 +235,6 @@ completionHandler:(void (^)(NSDictionary *results, NSError *error))completionHan
 			{{$f := .ToLanguageField "objc"}}[results set{{$f.Name | title}}:{{$f.Name}}];
 		{{end}}
 	{{else}}
-		// {{$apiprefix}}{{$interface.Name}}{{.Name}}Results *results = [{{$apiprefix}}{{$interface.Name}}{{.Name}}Results alloc];
 		{{$apiprefix}}{{$interface.Name}}{{.Name}}Params *params = [[{{$apiprefix}}{{$interface.Name}}{{.Name}}Params alloc] init];
 		{{range .Params}}{{$f := .ToLanguageField "objc"}}[params set{{$f.Name | title}}:{{$f.Name}}];
 		{{end}}
@@ -232,8 +244,13 @@ completionHandler:(void (^)(NSDictionary *results, NSError *error))completionHan
 		if([_api verbose]) {
 			NSLog(@"Requesting URL: %@", url);
 		}
-
-		[QXQortexapi request:url parameters:@{@"This": [self dictionary], @"Params": [params dictionary]} completionHandler:^(NSDictionary *data, NSError *error) {
+		NSDictionary *paramsDict = @{@"This": [self dictionary], @"Params": [params dictionary]};
+		NSError *nilerror = nil;
+{{if $method.IsStreamInput}}
+		[{{$apiprefix}}{{$pkgName}} request:url params:paramsDict stream:stream error:&nilerror completionHandler:^(NSDictionary *data, NSError *error) {;
+{{else}}
+		[{{$apiprefix}}{{$pkgName}} request:url params:paramsDict stream:nil error:&nilerror completionHandler:^(NSDictionary *data, NSError *error) {;
+{{end}}
 			if (error && failureBlock) {
 				if([_api verbose]) {
 					NSLog(@"Error: %@", error);
