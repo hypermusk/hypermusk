@@ -33,7 +33,7 @@ var TypeMapping = map[string]TypeMap{
 	"java": TypeMap{
 		KnownMapping: map[string]LanguageType{
 			"string":                  {"String", "", "%s", "%s", "String"},
-			"int64":                   {"int", "", "%s", "%s", "int"},
+			"int64":                   {"long", "", "%s", "%s", "long"},
 			"int32":                   {"int", "", "%s", "%s", "int"},
 			"int":                     {"int", "", "%s", "%s", "int"},
 			"float64":                 {"float", "", "%s", "%s", "float"},
