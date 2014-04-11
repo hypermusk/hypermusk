@@ -89,6 +89,7 @@ type Method struct {
 	Results                 []*Field
 	ConstructorForInterface *Interface
 	IsStreamInput           bool
+	StreamParamName         string
 }
 
 func (m *Method) ResultsForJavascriptFunction(prefix string) (r string) {
@@ -155,7 +156,7 @@ func (m *Method) paramsForObj() []string {
 	}
 
 	if m.IsStreamInput {
-		ps = append(ps, "stream:(NSInputStream*)stream")
+		ps = append(ps, m.StreamParamName+":(NSInputStream*)"+m.StreamParamName)
 	}
 
 	return ps
@@ -180,6 +181,11 @@ func (m *Method) ParamsForJavaFunction() (r string) {
 		op := p.ToLanguageField("java")
 		ps = append(ps, op.FullJavaTypeName()+" "+op.Name)
 	}
+
+	if m.IsStreamInput {
+		ps = append(ps, "InputStream "+m.StreamParamName)
+	}
+
 	r = strings.Join(ps, ",")
 	return
 }

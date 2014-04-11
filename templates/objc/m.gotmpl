@@ -211,7 +211,7 @@ static NSDateFormatter * _dateFormatter;
 	NSError *error;
 	NSDictionary *paramsDict = @{@"This": [self dictionary], @"Params": [params dictionary]};
 {{if $method.IsStreamInput}}
-	NSDictionary * dict = [{{$apiprefix}}{{$pkgName}} request:url params:paramsDict stream:stream error:&error completionHandler:nil];
+	NSDictionary * dict = [{{$apiprefix}}{{$pkgName}} request:url params:paramsDict stream:{{$method.StreamParamName}} error:&error completionHandler:nil];
 {{else}}
 	NSDictionary * dict = [{{$apiprefix}}{{$pkgName}} request:url params:paramsDict stream:nil error:&error completionHandler:nil];
 {{end}}
@@ -247,7 +247,7 @@ static NSDateFormatter * _dateFormatter;
 		NSDictionary *paramsDict = @{@"This": [self dictionary], @"Params": [params dictionary]};
 		NSError *nilerror = nil;
 {{if $method.IsStreamInput}}
-		[{{$apiprefix}}{{$pkgName}} request:url params:paramsDict stream:stream error:&nilerror completionHandler:^(NSDictionary *data, NSError *error) {;
+		[{{$apiprefix}}{{$pkgName}} request:url params:paramsDict stream:{{$method.StreamParamName}} error:&nilerror completionHandler:^(NSDictionary *data, NSError *error) {;
 {{else}}
 		[{{$apiprefix}}{{$pkgName}} request:url params:paramsDict stream:nil error:&nilerror completionHandler:^(NSDictionary *data, NSError *error) {;
 {{end}}

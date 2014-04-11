@@ -160,6 +160,7 @@ func markIfStreamAndRemoveLastParam(m *Method) {
 
 	if count == 1 && m.Params[len(m.Params)-1].Type == "io.Reader" {
 		m.IsStreamInput = true
+		m.StreamParamName = m.Params[len(m.Params)-1].Name
 		m.Params = m.Params[0 : len(m.Params)-1]
 	}
 

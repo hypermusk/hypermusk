@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Type;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -98,7 +99,7 @@ public class {{.Name | title}} {
 		}
 	}
 
-	public static RequestResult request(String url, String body) {
+	public static RequestResult request(String url, String body, InputStream stream) {
 		RequestResult r = new RequestResult();
 		try {
 			URL u = new URL(url);
@@ -106,12 +107,26 @@ public class {{.Name | title}} {
 			HttpURLConnection conn = (HttpURLConnection)u.openConnection();
 
 			conn.setRequestMethod("POST");
-			conn.setRequestProperty("Content-Type", "application/json;charset=utf-8");
+			if (stream == null) {
+				conn.setRequestProperty("Content-Type", "application/json;charset=utf-8");
+			} else {
+				conn.setRequestProperty("Content-Type", "application/octet-stream");
+				conn.setRequestProperty("X-HyperMuskStreamParams", Base64.encodeToString(body.getBytes(), Base64.NO_WRAP));
+			}
 			conn.setDoInput(true);
 			conn.setDoOutput(true);
 
 			DataOutputStream wr = new DataOutputStream(conn.getOutputStream ());
-			wr.write(body.getBytes());
+
+			if (stream == null) {
+				wr.write(body.getBytes());
+			} else {
+				byte[] buffer = new byte[4096];
+				int n;
+				while ((n = stream.read(buffer)) > 0) {
+					wr.write(buffer, 0, n);
+				}
+			}
 			wr.flush();
 			wr.close();
 

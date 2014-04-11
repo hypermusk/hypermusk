@@ -1,5 +1,6 @@
 {{define "java/interface"}}
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -45,7 +46,11 @@ public class {{.Interface.Name}} implements Serializable {
 
 	String url = String.format("%s/{{$interfaceName}}/{{$method.Name}}.json", _api.getBaseURL());
 	String requestBody = gson.toJson(m);
-	Qortexapi.RequestResult r = Qortexapi.request(url, requestBody);
+{{if $method.IsStreamInput}}
+	{{$apiprefix}}{{$pkgName}}.RequestResult r = {{$apiprefix}}{{$pkgName}}.request(url, requestBody, {{$method.StreamParamName}});
+{{else}}
+	{{$apiprefix}}{{$pkgName}}.RequestResult r = {{$apiprefix}}{{$pkgName}}.request(url, requestBody, null);
+{{end}}
 
 	if (r.getErr() != null) {
 		results = new {{.Name}}Results();

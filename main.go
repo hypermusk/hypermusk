@@ -164,6 +164,7 @@ func printjava(dir string, apiset *parser.APISet, javapackage string) {
 		writeSingleJavaFile(tpl, filedir, javapackage, "java/interface", inf.Name, data)
 	}
 	writeSingleJavaFile(tpl, filedir, javapackage, "java/remote_error", "RemoteError", nil)
+	writeSingleJavaFile(tpl, filedir, javapackage, "java/base64", "Base64", nil)
 
 	writeSingleJavaFile(tpl, filedir, javapackage, "java/packageclass", strings.Title(apiset.Name), apiset)
 }
