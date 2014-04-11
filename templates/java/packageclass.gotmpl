@@ -126,6 +126,7 @@ public class {{.Name | title}} {
 				while ((n = stream.read(buffer)) > 0) {
 					wr.write(buffer, 0, n);
 				}
+				stream.close();
 			}
 			wr.flush();
 			wr.close();
