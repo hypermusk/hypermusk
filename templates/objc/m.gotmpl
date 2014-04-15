@@ -81,6 +81,7 @@ static NSDateFormatter * _dateFormatter;
 		[httpRequest setValue:paramBase64 forHTTPHeaderField:@"X-HyperMuskStreamParams"];
 		[httpRequest setHTTPBodyStream:stream];
 	}
+	[httpRequest setValue:@"gzip, deflate" forHTTPHeaderField:@"Accept-Encoding"];
 
 	if([_api verbose]) {
 		NSLog(@"Request: %@", [NSString stringWithUTF8String:[requestBody bytes]]);

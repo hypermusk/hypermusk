@@ -73,6 +73,11 @@ func {{$interface.Name}}_{{$method.Name}}(w http.ResponseWriter, r *http.Request
 
 	w.Header().Add("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept")
 	w.Header().Add("Access-Control-Allow-Origin", "*")
+	gzipOk := strings.Contains(r.Header.Get("Accept-Encoding"), "gzip")
+	if gzipOk {
+		w.Header().Set("Content-Encoding", "gzip")
+	}
+
 	var body io.Reader
 {{if $method.IsStreamInput}}
 	body = base64.NewDecoder(base64.StdEncoding, strings.NewReader(r.Header.Get(StreamHTTPHeaderFieldName)))
@@ -96,7 +101,13 @@ func {{$interface.Name}}_{{$method.Name}}(w http.ResponseWriter, r *http.Request
 	dec := json.NewDecoder(body)
 	err := dec.Decode(&p)
 	var result {{$interface.Name}}_{{$method.Name}}_Results
-	enc := json.NewEncoder(w)
+	var mayGzipWriter io.Writer = w
+	if gzipOk {
+		gzipWriter := gzip.NewWriter(w)
+		defer gzipWriter.Close()
+		mayGzipWriter = gzipWriter
+	}
+	enc := json.NewEncoder(mayGzipWriter)
 	if err != nil {
 		result.Err = NewError(err)
 		enc.Encode(result)
