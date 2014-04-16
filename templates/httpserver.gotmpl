@@ -73,6 +73,8 @@ func {{$interface.Name}}_{{$method.Name}}(w http.ResponseWriter, r *http.Request
 
 	w.Header().Add("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept")
 	w.Header().Add("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+
 	gzipOk := strings.Contains(r.Header.Get("Accept-Encoding"), "gzip")
 	if gzipOk {
 		w.Header().Set("Content-Encoding", "gzip")
