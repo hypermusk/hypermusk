@@ -134,7 +134,7 @@ public class {{.Name | title}} {
 			wr.close();
 
 			InputStream is = conn.getInputStream();
-			if (conn.getContentEncoding().equals("gzip")) {
+			if (conn.getContentEncoding() != null && conn.getContentEncoding().equals("gzip")) {
 				is = new GZIPInputStream(is);
 			}
 			r.setReader(new InputStreamReader(is));
