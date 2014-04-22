@@ -125,7 +125,21 @@ func {{$interface.Name}}_{{$method.Name}}(w http.ResponseWriter, r *http.Request
 		enc.Encode(result)
 		return
 	}
-	{{$method.ResultsForGoServerFunction "result"}} = s.{{$method.Name}}({{$method.ParamsForGoServerFunction}}{{if $method.IsStreamInput}}, r.Body{{end}})
+	{{if $method.IsStreamInput}}
+		form, err := r.MultipartReader()
+		if err != nil {
+			result.Err = NewError(err)
+			enc.Encode(result)
+			return
+		}
+		part , err := form.NextPart()
+		if err != nil {
+			result.Err = NewError(err)
+			enc.Encode(result)
+			return
+		}
+	{{end}}
+	{{$method.ResultsForGoServerFunction "result"}} = s.{{$method.Name}}({{$method.ParamsForGoServerFunction}}{{if $method.IsStreamInput}}, part{{end}})
 	if result.Err != nil {
 		result.Err = NewError(result.Err)
 	}
