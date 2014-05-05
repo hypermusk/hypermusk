@@ -372,7 +372,11 @@ func (f Field) FullObjcTypeName() (r string) {
 
 func (f Field) FullJavaTypeName() (r string) {
 	if f.IsArray {
-		return "ArrayList<" + f.Type + ">"
+		if strings.Index("int,float,long,boolean", f.Type) != -1 {
+			return f.Type + "[]"
+		} else {
+			return "ArrayList<" + f.Type + ">"
+		}
 	}
 	if f.IsMap {
 		return "Map"
