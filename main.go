@@ -126,10 +126,16 @@ func printserver(dir string, apiset *parser.APISet, apipkg string, impl string) 
 func printgolang(dir string, apiset *parser.APISet, apipkg string) {
 	apiset.ServerImports = []string{
 		"bytes",
-		"errors",
 		"encoding/json",
 		apipkg,
 		"net/http",
+		"compress/gzip",
+		"github.com/theplant/govalidations",
+		"io",
+		"errors",
+		"log",
+		"net/http",
+		"runtime/debug",
 	}
 
 	tpl := codeTemplate()

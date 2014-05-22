@@ -6,11 +6,27 @@ import ({{range .ServerImports}}
 	"{{.}}"{{end}}
 )
 
+{{$errorTypeName := "SerializableError"}}
+
 var ApiDomain string
 func ToJson(v interface{}) (r []byte) {
 	r, _ = json.Marshal(v)
 	return
 }
+
+func printStackAndError(err error) {
+	log.Printf("********** Debug Error message: %+v ***********\n", err)
+	debug.PrintStack()
+}
+
+
+type {{$errorTypeName}} struct {
+	Message string
+	Code    string
+	Reason  govalidations.Validated
+}
+
+
 {{range .Interfaces}}{{$interface := .}}
 {{with .Constructor}}type {{$interface.Name | title}} struct {
 	{{range .Method.Params}}{{.Name | title}} {{.FullGoTypeName}}
@@ -30,7 +46,12 @@ func ToJson(v interface{}) (r []byte) {
 	}
 	{{else}}
 		type {{$interface.Name | snake}}_{{$method.Name}}_Results struct {
-			{{range .Results}}	{{.Name | title}} {{.FullGoTypeName}}
+			{{range .Results}}
+			{{ if eq .FullGoTypeName "error" }}
+			{{.Name | title}} {{$errorTypeName}}
+			{{ else }}
+			{{.Name | title}} {{.FullGoTypeName}}
+			{{ end }}
 			{{end}}
 		}
 
@@ -40,22 +61,54 @@ func ToJson(v interface{}) (r []byte) {
 			{{if $method.Params}}paramsMap := make(map[string]interface{})
 			{{range $method.Params}}paramsMap["{{.Name | title}}"] = {{.Name}}
 			{{end}}bodyMap["Params"] = paramsMap{{end}}
-			resp, err := http.DefaultClient.Post(ApiDomain+"/{{$interface.Name}}/{{.Name}}.json", "application/json", bytes.NewReader(ToJson(bodyMap)))
+
+			client := new(http.Client)
+			request, err := http.NewRequest("Post", ApiDomain+"/{{$interface.Name}}/{{.Name}}.json", bytes.NewReader(ToJson(bodyMap)))
+			request.Header.Add("Accept-Encoding", "gzip")
+
+			response, err := client.Do(request)
 			if err != nil {
+				if response.Body != nil {
+					defer response.Body.Close()
+				}
+				printStackAndError(err)
 				return
 			}
-			if resp.StatusCode >= 300 {
-			   	errors.New("http error, status code:" + string(resp.StatusCode) + "status" + resp.Status)
-			}
-			if resp.Body == nil {
+
+			if response.Body == nil {
 				return
 			}
+			defer response.Body.Close()
+
+			if response.StatusCode >= 300 {
+				err = errors.New("http error, status code:" + string(response.StatusCode) + "status" + response.Status)
+				return
+			}
+
+			// Check that the server actually sent compressed data
+			var reader io.ReadCloser
+			switch response.Header.Get("Content-Encoding") {
+			case "gzip":
+				reader, err = gzip.NewReader(response.Body)
+			default:
+				reader = response.Body
+			}
+
 			var result {{$interface.Name | snake}}_{{$method.Name}}_Results
-			defer resp.Body.Close()
-			dec := json.NewDecoder(resp.Body)
-			err = dec.Decode(&result)
-			{{range $i ,$r := $method.Results}}{{.Name | snake}} = result.{{.Name | title}}
-			{{end}}return
+			dec := json.NewDecoder(reader)
+			if e := dec.Decode(&result); e != nil {
+				printStackAndError(e)
+				// No return
+			}
+			{{range $i ,$r := $method.Results}}
+			{{$titleName := title .Name}}
+			{{if eq $titleName "Err"}}
+				err = result.Err.Reason.ToError()
+			{{else}}
+				{{.Name | snake}} = result.{{.Name | title}}
+			{{end}}
+			{{end}}
+			return
 		}{{end}}
 {{end}}
 {{end}}
