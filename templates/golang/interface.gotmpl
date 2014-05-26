@@ -68,14 +68,11 @@ type {{$errorTypeName}} struct {
 
 			response, err := client.Do(request)
 			if err != nil {
-				if response.Body != nil {
-					defer response.Body.Close()
-				}
 				printStackAndError(err)
 				return
 			}
 
-			if response.Body == nil {
+			if response == nil || response.Body == nil {
 				return
 			}
 			defer response.Body.Close()
