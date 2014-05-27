@@ -26,6 +26,20 @@ type {{$errorTypeName}} struct {
 	Reason  govalidations.Validated
 }
 
+func (this *{{$errorTypeName}}) toError() (err error) {
+
+	if this == nil {
+		return
+	}
+
+	err = this.Reason.ToError()
+	if err == nil && this.Message != "" {
+		err = errors.New(this.Message)
+	}
+
+	return
+}
+
 
 {{range .Interfaces}}{{$interface := .}}
 {{with .Constructor}}type {{$interface.Name | title}} struct {
@@ -100,7 +114,7 @@ type {{$errorTypeName}} struct {
 			{{range $i ,$r := $method.Results}}
 			{{$titleName := title .Name}}
 			{{if eq $titleName "Err"}}
-				err = result.Err.Reason.ToError()
+				err = result.Err.toError()
 			{{else}}
 				{{.Name | snake}} = result.{{.Name | title}}
 			{{end}}
