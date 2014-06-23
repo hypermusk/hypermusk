@@ -60,12 +60,7 @@ func (this *{{$errorTypeName}}) toError() (err error) {
 	}
 	{{else}}
 		type {{$interface.Name | snake}}_{{$method.Name}}_Results struct {
-			{{range .Results}}
-			{{ if eq .FullGoTypeName "error" }}
-			{{.Name | title}} {{$errorTypeName}}
-			{{ else }}
-			{{.Name | title}} {{.FullGoTypeName}}
-			{{ end }}
+			{{range .Results}}{{ if eq .FullGoTypeName "error" }}{{.Name | title}} {{$errorTypeName}}{{ else }}{{.Name | title}} {{.FullGoTypeName}}{{ end }}
 			{{end}}
 		}
 
@@ -92,7 +87,7 @@ func (this *{{$errorTypeName}}) toError() (err error) {
 			defer response.Body.Close()
 
 			if response.StatusCode >= 300 {
-				err = errors.New("http error, status code:" + string(response.StatusCode) + "status" + response.Status)
+				err = errors.New("request url: " + request.URL.String() + "status: " + response.Status)
 				return
 			}
 
