@@ -77,7 +77,9 @@ static NSDateFormatter * _dateFormatter;
 	} else {
 		[httpRequest setValue:@"application/octet-stream" forHTTPHeaderField:@"Content-Type"];
 		requestBody = [NSJSONSerialization dataWithJSONObject:params options:0 error:error];
-		NSString *paramBase64 = [NSString stringWithUTF8String:[[requestBody base64EncodedDataWithOptions:NSDataBase64EncodingEndLineWithLineFeed] bytes]];
+		NSData *base64RequestBodyData = [requestBody base64EncodedDataWithOptions:NSDataBase64EncodingEndLineWithLineFeed];
+		NSString *paramBase64 = [[NSString alloc ] initWithBytes: [base64RequestBodyData bytes] length:[base64RequestBodyData length] encoding:NSUTF8StringEncoding];
+
 		[httpRequest setValue:paramBase64 forHTTPHeaderField:@"X-HyperMuskStreamParams"];
 		[httpRequest setHTTPBodyStream:stream];
 	}
