@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>IDESourceControlProjectFavoriteDictionaryKey</key>
+	<false/>
+	<key>IDESourceControlProjectIdentifier</key>
+	<string>2ADF07E5-CC7E-485F-886F-B38D13681DB3</string>
+	<key>IDESourceControlProjectName</key>
+	<string>APITests</string>
+	<key>IDESourceControlProjectOriginsDictionary</key>
+	<dict>
+		<key>D641B3304AE2BFC45D788AC94C60D77CB9136AFF</key>
+		<string>github.com:hypermusk/hypermusk.git</string>
+	</dict>
+	<key>IDESourceControlProjectPath</key>
+	<string>tests/swift/APITests/APITests.xcodeproj</string>
+	<key>IDESourceControlProjectRelativeInstallPathDictionary</key>
+	<dict>
+		<key>D641B3304AE2BFC45D788AC94C60D77CB9136AFF</key>
+		<string>../../../../..</string>
+	</dict>
+	<key>IDESourceControlProjectURL</key>
+	<string>github.com:hypermusk/hypermusk.git</string>
+	<key>IDESourceControlProjectVersion</key>
+	<integer>111</integer>
+	<key>IDESourceControlProjectWCCIdentifier</key>
+	<string>D641B3304AE2BFC45D788AC94C60D77CB9136AFF</string>
+	<key>IDESourceControlProjectWCConfigurations</key>
+	<array>
+		<dict>
+			<key>IDESourceControlRepositoryExtensionIdentifierKey</key>
+			<string>public.vcs.git</string>
+			<key>IDESourceControlWCCIdentifierKey</key>
+			<string>D641B3304AE2BFC45D788AC94C60D77CB9136AFF</string>
+			<key>IDESourceControlWCCName</key>
+			<string>hypermusk</string>
+		</dict>
+	</array>
+</dict>
+</plist>

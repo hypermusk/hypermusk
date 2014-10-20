@@ -6,4 +6,5 @@ type UseMap struct {
 
 type Service interface {
 	Authorize(name string) (useMap UseMap, err error)
+	PermiessionDenied() (err error)
 }

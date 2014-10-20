@@ -269,10 +269,20 @@ static NSDateFormatter * _dateFormatter;
 				return;
 			}
 
+			{{$apiprefix}}{{$interface.Name}}{{.Name}}Results *results = [{{$apiprefix}}{{$interface.Name}}{{.Name}}Results alloc];
+			results = [results initWithDictionary: data];
+
+			if ({{$method.ObjcErrorResultName}}) {
+				if([_api verbose]) {
+					NSLog(@"Service Error: %@", {{$method.ObjcErrorResultName}});
+				}
+
+				failureBlock({{$method.ObjcErrorResultName}});
+				return;
+			}
+
 			if (successBlock) {
-				{{$apiprefix}}{{$interface.Name}}{{.Name}}Results *results = [{{$apiprefix}}{{$interface.Name}}{{.Name}}Results alloc];
-				results = [results initWithDictionary: data];
-				successBlock(results{{$rLen := len .Results}}{{if eq $rLen 1}}.err{{end}});
+				successBlock({{$method.ObjcReturnResultsOrOnlyOne}});
 			}
 		}];
 	{{end}}

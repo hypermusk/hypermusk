@@ -198,6 +198,11 @@ func (m *Method) ObjcReturnResultsOrOnlyOne() (r string) {
 	return "results"
 }
 
+func (m *Method) ObjcErrorResultName() (r string) {
+	r = "results." + ObjcSnake(m.Results[len(m.Results)-1].Name)
+	return
+}
+
 func (m *Method) JavaReturnResultsOrOnlyOne() (r string) {
 	if len(m.Results) == 1 {
 		r = "results.get" + strings.Title(m.Results[0].Name) + "()"
