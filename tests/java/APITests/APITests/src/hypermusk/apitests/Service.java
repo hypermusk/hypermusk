@@ -168,5 +168,80 @@ public class Service implements Serializable {
 	}
 
 
+	
+	// --- GetReservedKeywordsForObjCParams ---
+	public static class GetReservedKeywordsForObjCParams {
+		
+
+
+
+
+	}
+	// --- GetReservedKeywordsForObjCResults ---
+	public static class GetReservedKeywordsForObjCResults {
+		
+	@SerializedName("R")
+	private ReservedKeywordsForObjC _r;
+
+	@SerializedName("Err")
+	private RemoteError _err;
+
+
+
+	public ReservedKeywordsForObjC getR() {
+		return this._r;
+	}
+	public void setR(ReservedKeywordsForObjC _r) {
+		this._r = _r;
+	}
+
+	public RemoteError getErr() {
+		return this._err;
+	}
+	public void setErr(RemoteError _err) {
+		this._err = _err;
+	}
+
+
+
+	}
+	// --- GetReservedKeywordsForObjC ---
+	public GetReservedKeywordsForObjCResults getReservedKeywordsForObjC() {
+	
+	GetReservedKeywordsForObjCResults results = null;
+	GetReservedKeywordsForObjCParams params = new GetReservedKeywordsForObjCParams();
+	
+	Api _api = Api.get();
+
+	Gson gson = _api.gson();
+
+	Map m = new HashMap();
+	m.put("Params", params);
+	m.put("This", this);
+
+	String url = String.format("%s/Service/GetReservedKeywordsForObjC.json", _api.getBaseURL());
+	String requestBody = gson.toJson(m);
+
+	Api.RequestResult r = Api.request(url, requestBody, null);
+
+
+	if (r.getErr() != null) {
+		results = new GetReservedKeywordsForObjCResults();
+		results.setErr(r.getErr());
+		return results;
+	}
+
+	results = gson.fromJson(r.getReader(), GetReservedKeywordsForObjCResults.class);
+	try {
+		r.getReader().close();
+	} catch (IOException e) {
+	}
+
+	
+
+	return results;
+	}
+
+
 }
 

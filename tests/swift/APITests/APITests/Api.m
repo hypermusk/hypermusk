@@ -208,6 +208,53 @@ static NSDateFormatter * _dateFormatter;
 
 @end
 
+// --- ReservedKeywordsForObjC ---
+@implementation ReservedKeywordsForObjC
+
+- (id) initWithDictionary:(NSDictionary*)dict{
+	self = [super init];
+	if (!self) {
+		return self;
+	}
+	if (![dict isKindOfClass:[NSDictionary class]]) {
+		return self;
+	}
+	[self setNew:[dict valueForKey:@"New"]];
+	[self setAlloc:[dict valueForKey:@"Alloc"]];
+	[self setCopy:[dict valueForKey:@"Copy"]];
+	[self setMutableCopy:[dict valueForKey:@"MutableCopy"]];
+	[self setDescription:[dict valueForKey:@"Description"]];
+	[self setNormalName:[dict valueForKey:@"NormalName"]];
+
+	return self;
+}
+
+- (id)initWithCoder:(NSCoder *)decoder {
+    NSDictionary *dict = [decoder decodeObjectForKey:@"dict"];
+
+    self = [self initWithDictionary:dict];
+
+    return self;
+}
+
+- (void)encodeWithCoder:(NSCoder *)encoder {
+    [encoder encodeObject:[self dictionary] forKey:@"dict"];
+}
+
+- (NSDictionary*) dictionary {
+	NSMutableDictionary * dict = [[NSMutableDictionary alloc] init];
+	[dict setValue:self.New forKey:@"New"];
+	[dict setValue:self.Alloc forKey:@"Alloc"];
+	[dict setValue:self.Copy forKey:@"Copy"];
+	[dict setValue:self.MutableCopy forKey:@"MutableCopy"];
+	[dict setValue:self.Description forKey:@"Description"];
+	[dict setValue:self.normalName forKey:@"NormalName"];
+
+	return dict;
+}
+
+@end
+
 
 // === Interfaces ===
 
@@ -366,6 +413,85 @@ static NSDateFormatter * _dateFormatter;
 
 @end
 
+// --- GetReservedKeywordsForObjCParams ---
+@implementation ServiceGetReservedKeywordsForObjCParams : NSObject
+
+- (id) initWithDictionary:(NSDictionary*)dict{
+	self = [super init];
+	if (!self) {
+		return self;
+	}
+	if (![dict isKindOfClass:[NSDictionary class]]) {
+		return self;
+	}
+
+	return self;
+}
+
+- (id)initWithCoder:(NSCoder *)decoder {
+    NSDictionary *dict = [decoder decodeObjectForKey:@"dict"];
+
+    self = [self initWithDictionary:dict];
+
+    return self;
+}
+
+- (void)encodeWithCoder:(NSCoder *)encoder {
+    [encoder encodeObject:[self dictionary] forKey:@"dict"];
+}
+
+- (NSDictionary*) dictionary {
+	NSMutableDictionary * dict = [[NSMutableDictionary alloc] init];
+
+	return dict;
+}
+
+@end
+
+// --- GetReservedKeywordsForObjCResults ---
+@implementation ServiceGetReservedKeywordsForObjCResults : NSObject
+
+- (id) initWithDictionary:(NSDictionary*)dict{
+	self = [super init];
+	if (!self) {
+		return self;
+	}
+	if (![dict isKindOfClass:[NSDictionary class]]) {
+		return self;
+	}
+
+	id dictR = [dict valueForKey:@"R"];
+	if ([dictR isKindOfClass:[NSDictionary class]]){
+		[self setR:[[ReservedKeywordsForObjC alloc] initWithDictionary:dictR]];
+	}
+	[self setErr:[Api errorWithDictionary:[dict valueForKey:@"Err"]]];
+
+	return self;
+}
+
+- (id)initWithCoder:(NSCoder *)decoder {
+    NSDictionary *dict = [decoder decodeObjectForKey:@"dict"];
+
+    self = [self initWithDictionary:dict];
+
+    return self;
+}
+
+- (void)encodeWithCoder:(NSCoder *)encoder {
+    [encoder encodeObject:[self dictionary] forKey:@"dict"];
+}
+
+- (NSDictionary*) dictionary {
+	NSMutableDictionary * dict = [[NSMutableDictionary alloc] init];
+	[dict setValue:[self.r dictionary] forKey:@"R"];
+	
+	[dict setValue:self.err forKey:@"Err"];
+
+	return dict;
+}
+
+@end
+
 
 
 @implementation Service : NSObject
@@ -495,7 +621,7 @@ static NSDateFormatter * _dateFormatter;
 
 			if (error && failureBlock) {
 				if([_api verbose]) {
-					NSLog(@"Network Error: %@", error);
+					NSLog(@"Error: %@", error);
 				}
 
 				failureBlock(error);
@@ -516,6 +642,78 @@ static NSDateFormatter * _dateFormatter;
 
 			if (successBlock) {
 				successBlock(results.err);
+			}
+		}];
+	
+}
+
+// --- GetReservedKeywordsForObjC ---
+- (ServiceGetReservedKeywordsForObjCResults *) getReservedKeywordsForObjC {
+	
+	ServiceGetReservedKeywordsForObjCResults *results = [ServiceGetReservedKeywordsForObjCResults alloc];
+	ServiceGetReservedKeywordsForObjCParams *params = [[ServiceGetReservedKeywordsForObjCParams alloc] init];
+	
+	Api * _api = [Api get];
+	NSURL *url = [NSURL URLWithString:[NSString stringWithFormat:@"%@/Service/GetReservedKeywordsForObjC.json", [_api baseURL]]];
+	if([_api verbose]) {
+		NSLog(@"Requesting URL: %@", url);
+	}
+	NSError *error;
+	NSDictionary *paramsDict = @{@"This": [self dictionary], @"Params": [params dictionary]};
+
+	NSDictionary * dict = [Api request:url params:paramsDict stream:nil error:&error completionHandler:nil];
+
+	if(error != nil) {
+		if([_api verbose]) {
+			NSLog(@"Error: %@", error);
+		}
+		results = [results init];
+		[results setErr:error];
+		return results;
+	}
+	results = [results initWithDictionary: dict];
+	
+	return results;
+}
+
+- (void) getReservedKeywordsForObjC:(void (^)(ServiceGetReservedKeywordsForObjCResults *results))successBlock failure:(void (^)(NSError *error))failureBlock {
+	
+		ServiceGetReservedKeywordsForObjCParams *params = [[ServiceGetReservedKeywordsForObjCParams alloc] init];
+		
+
+		Api * _api = [Api get];
+		NSURL *url = [NSURL URLWithString:[NSString stringWithFormat:@"%@/Service/GetReservedKeywordsForObjC.json", [_api baseURL]]];
+		if([_api verbose]) {
+			NSLog(@"Requesting URL: %@", url);
+		}
+		NSDictionary *paramsDict = @{@"This": [self dictionary], @"Params": [params dictionary]};
+		NSError *nilerror = nil;
+
+		[Api request:url params:paramsDict stream:nil error:&nilerror completionHandler:^(NSDictionary *data, NSError *error) {;
+
+			if (error && failureBlock) {
+				if([_api verbose]) {
+					NSLog(@"Error: %@", error);
+				}
+
+				failureBlock(error);
+				return;
+			}
+
+			ServiceGetReservedKeywordsForObjCResults *results = [ServiceGetReservedKeywordsForObjCResults alloc];
+			results = [results initWithDictionary: data];
+
+			if (results.err) {
+				if([_api verbose]) {
+					NSLog(@"Service Error: %@", results.err);
+				}
+
+				failureBlock(results.err);
+				return;
+			}
+
+			if (successBlock) {
+				successBlock(results);
 			}
 		}];
 	

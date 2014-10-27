@@ -287,6 +287,7 @@ func ObjcSnake(name string) (r string) {
 	r = Snake(name)
 	if strings.Index(r, "new") == 0 ||
 		strings.Index(r, "alloc") == 0 ||
+		strings.Index(r, "description") == 0 ||
 		strings.Index(r, "copy") == 0 ||
 		strings.Index(r, "mutableCopy") == 0 {
 		r = strings.ToUpper(name[:1]) + name[1:]

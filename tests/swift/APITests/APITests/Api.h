@@ -24,6 +24,21 @@
 
 @end
 
+// --- ReservedKeywordsForObjC ---
+@interface ReservedKeywordsForObjC : NSObject<NSCoding>
+
+@property (nonatomic, strong) NSString * New;
+@property (nonatomic, strong) NSString * Alloc;
+@property (nonatomic, strong) NSString * Copy;
+@property (nonatomic, strong) NSString * MutableCopy;
+@property (nonatomic, strong) NSString * Description;
+@property (nonatomic, strong) NSString * normalName;
+
+- (id) initWithDictionary:(NSDictionary*)dict;
+- (NSDictionary*) dictionary;
+
+@end
+
 
 // === Interfaces ===
 
@@ -67,6 +82,26 @@
 
 @end
 
+// --- GetReservedKeywordsForObjCParams ---
+@interface ServiceGetReservedKeywordsForObjCParams : NSObject
+
+
+- (id) initWithDictionary:(NSDictionary*)dict;
+- (NSDictionary*) dictionary;
+
+@end
+
+// --- GetReservedKeywordsForObjCResults ---
+@interface ServiceGetReservedKeywordsForObjCResults : NSObject
+
+@property (nonatomic, strong) ReservedKeywordsForObjC * r;
+@property (nonatomic, strong) NSError * err;
+
+- (id) initWithDictionary:(NSDictionary*)dict;
+- (NSDictionary*) dictionary;
+
+@end
+
 
 @interface Service : NSObject- (NSDictionary*) dictionary;
 
@@ -75,5 +110,8 @@
 
 - (NSError *) permiessionDenied;
 - (void) permiessionDenied:(void (^)(NSError *error))successBlock failure:(void (^)(NSError *error))failureBlock;
+
+- (ServiceGetReservedKeywordsForObjCResults *) getReservedKeywordsForObjC;
+- (void) getReservedKeywordsForObjC:(void (^)(ServiceGetReservedKeywordsForObjCResults *results))successBlock failure:(void (^)(NSError *error))failureBlock;
 @end
 
