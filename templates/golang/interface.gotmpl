@@ -72,7 +72,7 @@ func (this *{{$errorTypeName}}) toError() (err error) {
 			{{end}}bodyMap["Params"] = paramsMap{{end}}
 
 			client := new(http.Client)
-			request, err := http.NewRequest("Post", ApiDomain+"/{{$interface.Name}}/{{.Name}}.json", bytes.NewReader(ToJson(bodyMap)))
+			request, err := http.NewRequest("POST", ApiDomain+"/{{$interface.Name}}/{{.Name}}.json", bytes.NewReader(ToJson(bodyMap)))
 			request.Header.Add("Accept-Encoding", "gzip")
 
 			response, err := client.Do(request)
