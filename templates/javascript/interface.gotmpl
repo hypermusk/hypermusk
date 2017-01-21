@@ -3,7 +3,7 @@
 import $ from 'jquery'
 var api = {};
 
-(function(api, $, undefined ) {
+(function(api, $ ) {
 	api.rpc = function(endpoint, input, callback) {
 		var methodUrl = api.baseurl + endpoint;
 		var message = JSON.stringify(input);
@@ -38,7 +38,7 @@ var api = {};
 
 
 
-(function( api, undefined ) {
+(function( api ) {
 	api.jsonp = {}
 {{range .Interfaces}}{{ $interfaceName := .Name}}
 	api.{{$interfaceName}} = function() {};
