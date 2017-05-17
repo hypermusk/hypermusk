@@ -99,7 +99,6 @@ func printserver(dir string, apiset *parser.APISet, apipkg string, impl string) 
 		"time",
 		"io",
 		"strings",
-		"compress/gzip",
 		"encoding/json",
 		"encoding/base64",
 		apipkg,
